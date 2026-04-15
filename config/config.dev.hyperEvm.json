@@ -1,0 +1,324 @@
+{
+  "relayers": [
+    {
+      "id": "handler_hyper_evm_1",
+      "name": "Handler HyperEVM 1",
+      "network": "hyper-evm-mainnet",
+      "paused": false,
+      "signer_id": "handler_1",
+      "network_type": "evm",
+      "custom_rpc_urls": [
+        {
+          "url": "HYPER_EVM_RPC_URL_1",
+          "weight": 100
+        },
+        {
+          "url": "HYPER_EVM_RPC_URL_2",
+          "weight": 100
+        },
+        {
+          "url": "https://rpc.hyperliquid.xyz/evm",
+          "weight": 20
+        }
+      ],
+      "policies": {
+        "min_balance": 1000000000000000000,
+        "eip1559_pricing": true,
+        "gas_limit_estimation": true
+      }
+    },
+    {
+      "id": "handler_hyper_evm_2",
+      "name": "Handler HyperEVM 2",
+      "network": "hyper-evm-mainnet",
+      "paused": false,
+      "signer_id": "handler_2",
+      "network_type": "evm",
+      "custom_rpc_urls": [
+        {
+          "url": "HYPER_EVM_RPC_URL_1",
+          "weight": 100
+        },
+        {
+          "url": "HYPER_EVM_RPC_URL_2",
+          "weight": 100
+        },
+        {
+          "url": "https://rpc.hyperliquid.xyz/evm",
+          "weight": 20
+        }
+      ],
+      "policies": {
+        "min_balance": 1000000000000000000,
+        "eip1559_pricing": true,
+        "gas_limit_estimation": true
+      }
+    },
+    {
+      "id": "handler_hyper_evm_3",
+      "name": "Handler HyperEVM 3",
+      "network": "hyper-evm-mainnet",
+      "paused": false,
+      "signer_id": "handler_3",
+      "network_type": "evm",
+      "custom_rpc_urls": [
+        {
+          "url": "HYPER_EVM_RPC_URL_1",
+          "weight": 100
+        },
+        {
+          "url": "HYPER_EVM_RPC_URL_2",
+          "weight": 100
+        },
+        {
+          "url": "https://rpc.hyperliquid.xyz/evm",
+          "weight": 20
+        }
+      ],
+      "policies": {
+        "min_balance": 1000000000000000000,
+        "eip1559_pricing": true,
+        "gas_limit_estimation": true
+      }
+    },
+    {
+      "id": "leverage_bot_hyper_evm_1",
+      "name": "Leverage Bot HyperEVM 1",
+      "network": "hyper-evm-mainnet",
+      "paused": false,
+      "signer_id": "leverage_bot_1",
+      "network_type": "evm",
+      "custom_rpc_urls": [
+        {
+          "url": "HYPER_EVM_RPC_URL_1",
+          "weight": 100
+        },
+        {
+          "url": "HYPER_EVM_RPC_URL_2",
+          "weight": 100
+        },
+        {
+          "url": "https://rpc.hyperliquid.xyz/evm",
+          "weight": 20
+        }
+      ],
+      "policies": {
+        "min_balance": 1000000000000000000,
+        "eip1559_pricing": true,
+        "gas_limit_estimation": true
+      }
+    },
+    {
+      "id": "leverage_bot_hyper_evm_2",
+      "name": "Leverage Bot HyperEVM 2",
+      "network": "hyper-evm-mainnet",
+      "paused": false,
+      "signer_id": "leverage_bot_2",
+      "network_type": "evm",
+      "custom_rpc_urls": [
+        {
+          "url": "HYPER_EVM_RPC_URL_1",
+          "weight": 100
+        },
+        {
+          "url": "HYPER_EVM_RPC_URL_2",
+          "weight": 100
+        },
+        {
+          "url": "https://rpc.hyperliquid.xyz/evm",
+          "weight": 20
+        }
+      ],
+      "policies": {
+        "min_balance": 1000000000000000000,
+        "eip1559_pricing": true,
+        "gas_limit_estimation": true
+      }
+    },
+    {
+      "id": "leverage_bot_hyper_evm_3",
+      "name": "Leverage Bot HyperEVM 3",
+      "network": "hyper-evm-mainnet",
+      "paused": false,
+      "signer_id": "leverage_bot_3",
+      "network_type": "evm",
+      "custom_rpc_urls": [
+        {
+          "url": "HYPER_EVM_RPC_URL_1",
+          "weight": 100
+        },
+        {
+          "url": "HYPER_EVM_RPC_URL_2",
+          "weight": 100
+        },
+        {
+          "url": "https://rpc.hyperliquid.xyz/evm",
+          "weight": 20
+        }
+      ],
+      "policies": {
+        "min_balance": 1000000000000000000,
+        "eip1559_pricing": true,
+        "gas_limit_estimation": true
+      }
+    },
+    {
+      "id": "fund_allocator_hyper_evm_1",
+      "name": "Fund Allocator HyperEVM 1",
+      "network": "hyper-evm-mainnet",
+      "paused": false,
+      "signer_id": "fund_allocator_1",
+      "network_type": "evm",
+      "custom_rpc_urls": [
+        {
+          "url": "HYPER_EVM_RPC_URL_1",
+          "weight": 100
+        },
+        {
+          "url": "HYPER_EVM_RPC_URL_2",
+          "weight": 100
+        },
+        {
+          "url": "https://rpc.hyperliquid.xyz/evm",
+          "weight": 20
+        }
+      ],
+      "policies": {
+        "min_balance": 1000000000000000000,
+        "eip1559_pricing": true,
+        "gas_limit_estimation": true
+      }
+    },
+    {
+      "id": "fund_allocator_hyper_evm_2",
+      "name": "Fund Allocator HyperEVM 2",
+      "network": "hyper-evm-mainnet",
+      "paused": false,
+      "signer_id": "fund_allocator_2",
+      "network_type": "evm",
+      "custom_rpc_urls": [
+        {
+          "url": "HYPER_EVM_RPC_URL_1",
+          "weight": 100
+        },
+        {
+          "url": "HYPER_EVM_RPC_URL_2",
+          "weight": 100
+        },
+        {
+          "url": "https://rpc.hyperliquid.xyz/evm",
+          "weight": 20
+        }
+      ],
+      "policies": {
+        "min_balance": 1000000000000000000,
+        "eip1559_pricing": true,
+        "gas_limit_estimation": true
+      }
+    },
+    {
+      "id": "fund_allocator_hyper_evm_3",
+      "name": "Fund Allocator HyperEVM 3",
+      "network": "hyper-evm-mainnet",
+      "paused": false,
+      "signer_id": "fund_allocator_3",
+      "network_type": "evm",
+      "custom_rpc_urls": [
+        {
+          "url": "HYPER_EVM_RPC_URL_1",
+          "weight": 100
+        },
+        {
+          "url": "HYPER_EVM_RPC_URL_2",
+          "weight": 100
+        },
+        {
+          "url": "https://rpc.hyperliquid.xyz/evm",
+          "weight": 20
+        }
+      ],
+      "policies": {
+        "min_balance": 1000000000000000000,
+        "eip1559_pricing": true,
+        "gas_limit_estimation": true
+      }
+    }
+  ],
+  "notifications": [],
+  "signers": [
+    {
+      "id": "handler_1",
+      "type": "aws_kms",
+      "config": {
+        "region": "ap-south-1",
+        "key_id": "HANDLER_KMS_KEY_1"
+      }
+    },
+    {
+      "id": "handler_2",
+      "type": "aws_kms",
+      "config": {
+        "region": "ap-south-1",
+        "key_id": "HANDLER_KMS_KEY_2"
+      }
+    },
+    {
+      "id": "handler_3",
+      "type": "aws_kms",
+      "config": {
+        "region": "ap-south-1",
+        "key_id": "HANDLER_KMS_KEY_3"
+      }
+    },
+    {
+      "id": "leverage_bot_1",
+      "type": "aws_kms",
+      "config": {
+        "region": "ap-south-1",
+        "key_id": "LEVERAGE_BOT_KMS_KEY_1"
+      }
+    },
+    {
+      "id": "leverage_bot_2",
+      "type": "aws_kms",
+      "config": {
+        "region": "ap-south-1",
+        "key_id": "LEVERAGE_BOT_KMS_KEY_2"
+      }
+    },
+    {
+      "id": "leverage_bot_3",
+      "type": "aws_kms",
+      "config": {
+        "region": "ap-south-1",
+        "key_id": "LEVERAGE_BOT_KMS_KEY_3"
+      }
+    },
+    {
+      "id": "fund_allocator_1",
+      "type": "aws_kms",
+      "config": {
+        "region": "ap-south-1",
+        "key_id": "FUND_ALLOCATOR_KMS_KEY_1"
+      }
+    },
+    {
+      "id": "fund_allocator_2",
+      "type": "aws_kms",
+      "config": {
+        "region": "ap-south-1",
+        "key_id": "FUND_ALLOCATOR_KMS_KEY_2"
+      }
+    },
+    {
+      "id": "fund_allocator_3",
+      "type": "aws_kms",
+      "config": {
+        "region": "ap-south-1",
+        "key_id": "FUND_ALLOCATOR_KMS_KEY_3"
+      }
+    }
+  ],
+  "networks": "./config/networks",
+  "plugins": []
+}
