@@ -250,72 +250,72 @@
       "id": "handler_1",
       "type": "aws_kms",
       "config": {
-        "region": "ap-south-1",
-        "key_id": "HANDLER_KMS_KEY_1"
+        "region": "us-west-1",
+        "key_id": "4269e79e-e8c6-4d7f-8661-7d6da273be9f"
       }
     },
     {
       "id": "handler_2",
       "type": "aws_kms",
       "config": {
-        "region": "ap-south-1",
-        "key_id": "HANDLER_KMS_KEY_2"
+        "region": "us-west-1",
+        "key_id": "5e66b9fe-1a1f-48e8-b2d7-2f622391aef5"
       }
     },
     {
       "id": "handler_3",
       "type": "aws_kms",
       "config": {
-        "region": "ap-south-1",
-        "key_id": "HANDLER_KMS_KEY_3"
+        "region": "us-west-1",
+        "key_id": "11473777-7544-4280-ac08-8c3e095245e2"
       }
     },
     {
       "id": "leverage_bot_1",
       "type": "aws_kms",
       "config": {
-        "region": "ap-south-1",
-        "key_id": "LEVERAGE_BOT_KMS_KEY_1"
+        "region": "us-west-1",
+        "key_id": "1926628b-de8b-496b-9db4-e9b1c9d4e14d"
       }
     },
     {
       "id": "leverage_bot_2",
       "type": "aws_kms",
       "config": {
-        "region": "ap-south-1",
-        "key_id": "LEVERAGE_BOT_KMS_KEY_2"
+        "region": "us-west-1",
+        "key_id": "92dc0a2a-d88a-4ab2-a8f1-7f4f493bb490"
       }
     },
     {
       "id": "leverage_bot_3",
       "type": "aws_kms",
       "config": {
-        "region": "ap-south-1",
-        "key_id": "LEVERAGE_BOT_KMS_KEY_3"
+        "region": "us-west-1",
+        "key_id": "421985e2-b706-465e-9852-bb4e24978217"
       }
     },
     {
       "id": "fund_allocator_1",
       "type": "aws_kms",
       "config": {
-        "region": "ap-south-1",
-        "key_id": "FUND_ALLOCATOR_KMS_KEY_1"
+        "region": "us-west-1",
+        "key_id": "3ac7e7a7-8c87-4503-a969-8a8250bd0949"
       }
     },
     {
       "id": "fund_allocator_2",
       "type": "aws_kms",
       "config": {
-        "region": "ap-south-1",
-        "key_id": "FUND_ALLOCATOR_KMS_KEY_2"
+        "region": "us-west-1",
+        "key_id": "7c60f396-a016-40e7-928a-ed64baa34ed4"
       }
     },
     {
       "id": "fund_allocator_3",
       "type": "aws_kms",
       "config": {
-        "region": "ap-south-1",
-        "key_id": "FUND_ALLOCATOR_KMS_KEY_3"
+        "region": "us-west-1",
+        "key_id": "eaf5750a-01a2-4b61-aaec-2c7ab006ff93"
       }
     }
   ],
