@@ -9,7 +9,7 @@ env:
   ECR_REPOSITORY_APP: openzeppelin-relayer
   APP_DIR: "${{ github.workspace }}"
   LAMBDA_FUNCTION_NAME: upload-config-to-efs
-  ECS_CLUSTER: levr-v1-cluster # Update with your ECS cluster name
+  ECS_CLUSTER: delpho-cluster
   ECS_SERVICE: openzeppeline
   ECS_TASK_DEFINITION_FAMILY: openzeppeline
   CONTAINER_NAME: openzeppeline
@@ -184,25 +184,25 @@ jobs:
             echo "⚠️ No files found in $NETWORKS_DIR, skipping upload."
           fi
 
-    #   - name: Download task definition
-    #     run: |
-    #         aws ecs describe-task-definition \
-    #         --task-definition ${{ env.ECS_TASK_DEFINITION_FAMILY }} \
-    #         --query taskDefinition \
-    #         > task-definition.json
+      - name: Download task definition
+        run: |
+            aws ecs describe-task-definition \
+            --task-definition ${{ env.ECS_TASK_DEFINITION_FAMILY }} \
+            --query taskDefinition \
+            > task-definition.json
 
-    #   - name: Fill in the new image ID in the Amazon ECS task definition
-    #     id: task-def
-    #     uses: aws-actions/amazon-ecs-render-task-definition@v1
-    #     with:
-    #       task-definition: task-definition.json
-    #       container-name: ${{ env.CONTAINER_NAME }}
-    #       image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_APP }}:}}:${{ needs.env-setup.outputs.image_tag }}
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_APP }}:}}:${{ needs.env-setup.outputs.image_tag }}
 
-    #   - name: Deploy Amazon ECS task definition
-    #     uses: aws-actions/amazon-ecs-deploy-task-definition@v2
-    #     with:
-    #       task-definition: ${{ steps.task-def.outputs.task-definition }}
-    #       service: ${{ env.ECS_SERVICE }}
-    #       cluster: ${{ env.ECS_CLUSTER }}
-    #       # wait-for-service-stability: true
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          # wait-for-service-stability: true
