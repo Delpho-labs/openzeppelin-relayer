@@ -1,0 +1,103 @@
+name: Openzeppelin Relayer CI/CD Pipeline
+on:
+  push:
+    branches: [dev, prod]
+
+
+# Global environment variables
+env:
+  ECR_REPOSITORY_APP: openzeppelin-relayer
+  APP_DIR: "${{ github.workspace }}"
+  LAMBDA_FUNCTION_NAME: upload-config-to-efs
+  ECS_CLUSTER: levr-v1-cluster # Update with your ECS cluster name
+  ECS_SERVICE: openzeppeline
+  ECS_TASK_DEFINITION_FAMILY: openzeppeline
+  CONTAINER_NAME: openzeppeline
+  SECRET_NAME: openzeppeline-relayer
+
+permissions:
+    id-token: write
+    contents: read
+
+jobs:
+  env-setup:
+    runs-on: ubuntu-latest
+    outputs:
+        image_tag: ${{ steps.set-tag.outputs.TAG }}
+        target_env: ${{ steps.env_check.outputs.ENV_NAME_TAG }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Check push branch and set environment variables
+        id: env_check
+        run: |
+            echo "Running on branch ${{ github.ref }}"
+
+            if   [ "${{ github.ref }}" = "refs/heads/dev" ]; then
+                echo "ENV_NAME_TAG=development" >> $GITHUB_OUTPUT
+
+            elif [ "${{ github.ref }}" = "refs/heads/prod" ]; then
+                echo "ENV_NAME_TAG=production" >> $GITHUB_OUTPUT
+            fi
+  
+
+      - name: Set unique Docker image tag
+        id: set-tag
+        run: echo "TAG=$(date '+%Y%m%d%H%M%S')-${{ github.run_id }}" >> $GITHUB_OUTPUT
+
+  build-and-upload-image:
+    needs: env-setup
+    runs-on: ubuntu-latest
+    environment: ${{ needs.env-setup.outputs.target_env }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Build Docker Image
+        run: |
+            docker build -f ${{ env.APP_DIR }}/Dockerfile.production -t openzeppeline-relayer-local:${{ github.sha }} ${{ env.APP_DIR }}
+            docker save openzeppeline-relayer-local:${{ github.sha }} > openzeppeline-relayer-image.tar
+
+      - name: Upload Image Artifact
+        uses: actions/upload-artifact@v4
+        with:
+            name: openzeppeline-relayer-image
+            path: openzeppeline-relayer-image.tar
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+            role-to-assume: ${{ secrets.ROLE_TO_ASSUME }}
+            aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Generate config file
+        id: generate-config
+        env:
+          SECRET_NAME: ${{ env.SECRET_NAME }}
+        run: |
+          mv ${APP_DIR}/config/${{ secrets.CONFIG_NAME }} ${APP_DIR}/config/config.json
+          ls -al ${APP_DIR}/config
+
+          SECRET_JSON=$(aws ssm get-parameter --name /aws/reference/secretsmanager/${SECRET_NAME} --with-decryption | jq -r '.Parameter.Value')
+
+          HYPER_EVM_RPC_URL_1=$(echo "$SECRET_JSON" | jq -r '.HYPER_EVM_RPC_URL_1')
+          HYPER_EVM_RPC_URL_2=$(echo "$SECRET_JSON" | jq -r '.HYPER_EVM_RPC_URL_2')
+          echo "Substituting mainnet RPC URLs..."
+          sed -i "s|HYPER_EVM_RPC_URL_1|$HYPER_EVM_RPC_URL_1|g" ${APP_DIR}/config/config.json
+          sed -i "s|HYPER_EVM_RPC_URL_2|$HYPER_EVM_RPC_URL_2|g" ${APP_DIR}/config/config.json
+          echo "PAYLOAD=$(jq -c . ${APP_DIR}/config/config.json)" >> $GITHUB_OUTPUT
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Tag and Push to ECR
+        env:
+            REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+            TAG: ${{ needs.env-setup.outputs.image_tag }}
+        run: |
+            docker tag openzeppeline-relayer:${{ github.sha }} $REGISTRY/${{ env.ECR_REPOSITORY_APP }}:$TAG
+            docker tag openzeppeline-relayer:${{ github.sha }} $REGISTRY/${{ env.ECR_REPOSITORY_APP }}:latest
+            docker push $REGISTRY/${{ env.ECR_REPOSITORY_APP }}:$TAG
+            docker push $REGISTRY/${{ env.ECR_REPOSITORY_APP }}:latest
