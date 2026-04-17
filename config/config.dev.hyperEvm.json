@@ -242,6 +242,87 @@
         "eip1559_pricing": true,
         "gas_limit_estimation": true
       }
+    },
+    {
+      "id": "liquidator_bot_hyper_evm_1",
+      "name": "Liquidator Bot HyperEVM 1",
+      "network": "hyper-evm-mainnet",
+      "paused": false,
+      "signer_id": "liquidator_bot_1",
+      "network_type": "evm",
+      "custom_rpc_urls": [
+        {
+          "url": "HYPER_EVM_RPC_URL_1",
+          "weight": 100
+        },
+        {
+          "url": "HYPER_EVM_RPC_URL_2",
+          "weight": 100
+        },
+        {
+          "url": "https://rpc.hyperliquid.xyz/evm",
+          "weight": 20
+        }
+      ],
+      "policies": {
+        "min_balance": 1000000000000000000,
+        "eip1559_pricing": true,
+        "gas_limit_estimation": true
+      }
+    },
+    {
+      "id": "liquidator_bot_hyper_evm_2",
+      "name": "Liquidator Bot HyperEVM 2",
+      "network": "hyper-evm-mainnet",
+      "paused": false,
+      "signer_id": "liquidator_bot_2",
+      "network_type": "evm",
+      "custom_rpc_urls": [
+        {
+          "url": "HYPER_EVM_RPC_URL_1",
+          "weight": 100
+        },
+        {
+          "url": "HYPER_EVM_RPC_URL_2",
+          "weight": 100
+        },
+        {
+          "url": "https://rpc.hyperliquid.xyz/evm",
+          "weight": 20
+        }
+      ],
+      "policies": {
+        "min_balance": 1000000000000000000,
+        "eip1559_pricing": true,
+        "gas_limit_estimation": true
+      }
+    },
+    {
+      "id": "liquidator_bot_hyper_evm_3",
+      "name": "Liquidator Bot HyperEVM 3",
+      "network": "hyper-evm-mainnet",
+      "paused": false,
+      "signer_id": "liquidator_bot_3",
+      "network_type": "evm",
+      "custom_rpc_urls": [
+        {
+          "url": "HYPER_EVM_RPC_URL_1",
+          "weight": 100
+        },
+        {
+          "url": "HYPER_EVM_RPC_URL_2",
+          "weight": 100
+        },
+        {
+          "url": "https://rpc.hyperliquid.xyz/evm",
+          "weight": 20
+        }
+      ],
+      "policies": {
+        "min_balance": 1000000000000000000,
+        "eip1559_pricing": true,
+        "gas_limit_estimation": true
+      }
     }
   ],
   "notifications": [],
@@ -316,6 +397,30 @@
       "config": {
         "region": "us-west-1",
         "key_id": "eaf5750a-01a2-4b61-aaec-2c7ab006ff93"
+      }
+    },
+    {
+      "id": "liquidator_bot_1",
+      "type": "aws_kms",
+      "config": {
+        "region": "us-west-1",
+        "key_id": "8e5b6954-1b6c-41cb-9b57-160df7406428"
+      }
+    },
+    {
+      "id": "liquidator_bot_2",
+      "type": "aws_kms",
+      "config": {
+        "region": "us-west-1",
+        "key_id": "e5cb9b35-de15-43c8-b314-e2909b20e51c"
+      }
+    },
+    {
+      "id": "liquidator_bot_3",
+      "type": "aws_kms",
+      "config": {
+        "region": "us-west-1",
+        "key_id": "74aa5878-737b-4409-a409-685dccf1800e"
       }
     }
   ],
