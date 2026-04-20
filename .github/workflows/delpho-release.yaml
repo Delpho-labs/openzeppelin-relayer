@@ -56,7 +56,7 @@ jobs:
 
       - name: Build Docker Image
         run: |
-            docker build -f ${{ env.APP_DIR }}/Dockerfile.production -t openzeppeline-relayer-local:${{ github.sha }} ${{ env.APP_DIR }}
+            docker build --build-arg  CARGO_FEATURES=redis-tls-native -f ${{ env.APP_DIR }}/Dockerfile.production -t openzeppeline-relayer-local:${{ github.sha }} ${{ env.APP_DIR }}
             docker save openzeppeline-relayer-local:${{ github.sha }} > openzeppeline-relayer-image.tar
 
       - name: Upload Image Artifact
