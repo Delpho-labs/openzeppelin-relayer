@@ -82,6 +82,60 @@
       }
     },
     {
+      "id": "handler_hyper_evm_4",
+      "name": "Handler HyperEVM 4",
+      "network": "hyper-evm-mainnet",
+      "paused": false,
+      "signer_id": "handler_4",
+      "network_type": "evm",
+      "custom_rpc_urls": [
+        {
+          "url": "HYPER_EVM_RPC_URL_1",
+          "weight": 100
+        },
+        {
+          "url": "HYPER_EVM_RPC_URL_2",
+          "weight": 100
+        },
+        {
+          "url": "https://rpc.hyperliquid.xyz/evm",
+          "weight": 20
+        }
+      ],
+      "policies": {
+        "min_balance": 1000000000000000000,
+        "eip1559_pricing": true,
+        "gas_limit_estimation": true
+      }
+    },
+    {
+      "id": "handler_hyper_evm_5",
+      "name": "Handler HyperEVM 5",
+      "network": "hyper-evm-mainnet",
+      "paused": false,
+      "signer_id": "handler_5",
+      "network_type": "evm",
+      "custom_rpc_urls": [
+        {
+          "url": "HYPER_EVM_RPC_URL_1",
+          "weight": 100
+        },
+        {
+          "url": "HYPER_EVM_RPC_URL_2",
+          "weight": 100
+        },
+        {
+          "url": "https://rpc.hyperliquid.xyz/evm",
+          "weight": 20
+        }
+      ],
+      "policies": {
+        "min_balance": 1000000000000000000,
+        "eip1559_pricing": true,
+        "gas_limit_estimation": true
+      }
+    },
+    {
       "id": "leverage_bot_hyper_evm_1",
       "name": "Leverage Bot HyperEVM 1",
       "network": "hyper-evm-mainnet",
@@ -141,6 +195,60 @@
       "network": "hyper-evm-mainnet",
       "paused": false,
       "signer_id": "leverage_bot_3",
+      "network_type": "evm",
+      "custom_rpc_urls": [
+        {
+          "url": "HYPER_EVM_RPC_URL_1",
+          "weight": 100
+        },
+        {
+          "url": "HYPER_EVM_RPC_URL_2",
+          "weight": 100
+        },
+        {
+          "url": "https://rpc.hyperliquid.xyz/evm",
+          "weight": 20
+        }
+      ],
+      "policies": {
+        "min_balance": 1000000000000000000,
+        "eip1559_pricing": true,
+        "gas_limit_estimation": true
+      }
+    },
+    {
+      "id": "leverage_bot_hyper_evm_4",
+      "name": "Leverage Bot HyperEVM 4",
+      "network": "hyper-evm-mainnet",
+      "paused": false,
+      "signer_id": "leverage_bot_4",
+      "network_type": "evm",
+      "custom_rpc_urls": [
+        {
+          "url": "HYPER_EVM_RPC_URL_1",
+          "weight": 100
+        },
+        {
+          "url": "HYPER_EVM_RPC_URL_2",
+          "weight": 100
+        },
+        {
+          "url": "https://rpc.hyperliquid.xyz/evm",
+          "weight": 20
+        }
+      ],
+      "policies": {
+        "min_balance": 1000000000000000000,
+        "eip1559_pricing": true,
+        "gas_limit_estimation": true
+      }
+    },
+    {
+      "id": "leverage_bot_hyper_evm_5",
+      "name": "Leverage Bot HyperEVM 5",
+      "network": "hyper-evm-mainnet",
+      "paused": false,
+      "signer_id": "leverage_bot_5",
       "network_type": "evm",
       "custom_rpc_urls": [
         {
@@ -244,6 +352,60 @@
       }
     },
     {
+      "id": "fund_allocator_hyper_evm_4",
+      "name": "Fund Allocator HyperEVM 4",
+      "network": "hyper-evm-mainnet",
+      "paused": false,
+      "signer_id": "fund_allocator_4",
+      "network_type": "evm",
+      "custom_rpc_urls": [
+        {
+          "url": "HYPER_EVM_RPC_URL_1",
+          "weight": 100
+        },
+        {
+          "url": "HYPER_EVM_RPC_URL_2",
+          "weight": 100
+        },
+        {
+          "url": "https://rpc.hyperliquid.xyz/evm",
+          "weight": 20
+        }
+      ],
+      "policies": {
+        "min_balance": 1000000000000000000,
+        "eip1559_pricing": true,
+        "gas_limit_estimation": true
+      }
+    },
+    {
+      "id": "fund_allocator_hyper_evm_5",
+      "name": "Fund Allocator HyperEVM 5",
+      "network": "hyper-evm-mainnet",
+      "paused": false,
+      "signer_id": "fund_allocator_5",
+      "network_type": "evm",
+      "custom_rpc_urls": [
+        {
+          "url": "HYPER_EVM_RPC_URL_1",
+          "weight": 100
+        },
+        {
+          "url": "HYPER_EVM_RPC_URL_2",
+          "weight": 100
+        },
+        {
+          "url": "https://rpc.hyperliquid.xyz/evm",
+          "weight": 20
+        }
+      ],
+      "policies": {
+        "min_balance": 1000000000000000000,
+        "eip1559_pricing": true,
+        "gas_limit_estimation": true
+      }
+    },
+    {
       "id": "liquidator_bot_hyper_evm_1",
       "name": "Liquidator Bot HyperEVM 1",
       "network": "hyper-evm-mainnet",
@@ -323,6 +485,60 @@
         "eip1559_pricing": true,
         "gas_limit_estimation": true
       }
+    },
+    {
+      "id": "liquidator_bot_hyper_evm_4",
+      "name": "Liquidator Bot HyperEVM 4",
+      "network": "hyper-evm-mainnet",
+      "paused": false,
+      "signer_id": "liquidator_bot_4",
+      "network_type": "evm",
+      "custom_rpc_urls": [
+        {
+          "url": "HYPER_EVM_RPC_URL_1",
+          "weight": 100
+        },
+        {
+          "url": "HYPER_EVM_RPC_URL_2",
+          "weight": 100
+        },
+        {
+          "url": "https://rpc.hyperliquid.xyz/evm",
+          "weight": 20
+        }
+      ],
+      "policies": {
+        "min_balance": 1000000000000000000,
+        "eip1559_pricing": true,
+        "gas_limit_estimation": true
+      }
+    },
+    {
+      "id": "liquidator_bot_hyper_evm_5",
+      "name": "Liquidator Bot HyperEVM 5",
+      "network": "hyper-evm-mainnet",
+      "paused": false,
+      "signer_id": "liquidator_bot_5",
+      "network_type": "evm",
+      "custom_rpc_urls": [
+        {
+          "url": "HYPER_EVM_RPC_URL_1",
+          "weight": 100
+        },
+        {
+          "url": "HYPER_EVM_RPC_URL_2",
+          "weight": 100
+        },
+        {
+          "url": "https://rpc.hyperliquid.xyz/evm",
+          "weight": 20
+        }
+      ],
+      "policies": {
+        "min_balance": 1000000000000000000,
+        "eip1559_pricing": true,
+        "gas_limit_estimation": true
+      }
     }
   ],
   "notifications": [],
@@ -332,7 +548,7 @@
       "type": "aws_kms",
       "config": {
         "region": "us-west-1",
-        "key_id": "4269e79e-e8c6-4d7f-8661-7d6da273be9f"
+        "key_id": "HANDLER_KMS_KEY_1"
       }
     },
     {
@@ -340,7 +556,7 @@
       "type": "aws_kms",
       "config": {
         "region": "us-west-1",
-        "key_id": "5e66b9fe-1a1f-48e8-b2d7-2f622391aef5"
+        "key_id": "HANDLER_KMS_KEY_2"
       }
     },
     {
@@ -348,7 +564,23 @@
       "type": "aws_kms",
       "config": {
         "region": "us-west-1",
-        "key_id": "11473777-7544-4280-ac08-8c3e095245e2"
+        "key_id": "HANDLER_KMS_KEY_3"
+      }
+    },
+    {
+      "id": "handler_4",
+      "type": "aws_kms",
+      "config": {
+        "region": "us-west-1",
+        "key_id": "HANDLER_KMS_KEY_4"
+      }
+    },
+    {
+      "id": "handler_5",
+      "type": "aws_kms",
+      "config": {
+        "region": "us-west-1",
+        "key_id": "HANDLER_KMS_KEY_5"
       }
     },
     {
@@ -356,7 +588,7 @@
       "type": "aws_kms",
       "config": {
         "region": "us-west-1",
-        "key_id": "1926628b-de8b-496b-9db4-e9b1c9d4e14d"
+        "key_id": "LEVERAGE_BOT_KMS_KEY_1"
       }
     },
     {
@@ -364,7 +596,7 @@
       "type": "aws_kms",
       "config": {
         "region": "us-west-1",
-        "key_id": "92dc0a2a-d88a-4ab2-a8f1-7f4f493bb490"
+        "key_id": "LEVERAGE_BOT_KMS_KEY_2"
       }
     },
     {
@@ -372,7 +604,23 @@
       "type": "aws_kms",
       "config": {
         "region": "us-west-1",
-        "key_id": "421985e2-b706-465e-9852-bb4e24978217"
+        "key_id": "LEVERAGE_BOT_KMS_KEY_3"
+      }
+    },
+    {
+      "id": "leverage_bot_4",
+      "type": "aws_kms",
+      "config": {
+        "region": "us-west-1",
+        "key_id": "LEVERAGE_BOT_KMS_KEY_4"
+      }
+    },
+    {
+      "id": "leverage_bot_5",
+      "type": "aws_kms",
+      "config": {
+        "region": "us-west-1",
+        "key_id": "LEVERAGE_BOT_KMS_KEY_5"
       }
     },
     {
@@ -380,7 +628,7 @@
       "type": "aws_kms",
       "config": {
         "region": "us-west-1",
-        "key_id": "3ac7e7a7-8c87-4503-a969-8a8250bd0949"
+        "key_id": "FUND_ALLOCATOR_KMS_KEY_1"
       }
     },
     {
@@ -388,7 +636,7 @@
       "type": "aws_kms",
       "config": {
         "region": "us-west-1",
-        "key_id": "7c60f396-a016-40e7-928a-ed64baa34ed4"
+        "key_id": "FUND_ALLOCATOR_KMS_KEY_2"
       }
     },
     {
@@ -396,7 +644,23 @@
       "type": "aws_kms",
       "config": {
         "region": "us-west-1",
-        "key_id": "eaf5750a-01a2-4b61-aaec-2c7ab006ff93"
+        "key_id": "FUND_ALLOCATOR_KMS_KEY_3"
+      }
+    },
+    {
+      "id": "fund_allocator_4",
+      "type": "aws_kms",
+      "config": {
+        "region": "us-west-1",
+        "key_id": "FUND_ALLOCATOR_KMS_KEY_4"
+      }
+    },
+    {
+      "id": "fund_allocator_5",
+      "type": "aws_kms",
+      "config": {
+        "region": "us-west-1",
+        "key_id": "FUND_ALLOCATOR_KMS_KEY_5"
       }
     },
     {
@@ -404,7 +668,7 @@
       "type": "aws_kms",
       "config": {
         "region": "us-west-1",
-        "key_id": "8e5b6954-1b6c-41cb-9b57-160df7406428"
+        "key_id": "LIQUIDATOR_BOT_KMS_KEY_1"
       }
     },
     {
@@ -412,7 +676,7 @@
       "type": "aws_kms",
       "config": {
         "region": "us-west-1",
-        "key_id": "e5cb9b35-de15-43c8-b314-e2909b20e51c"
+        "key_id": "LIQUIDATOR_BOT_KMS_KEY_2"
       }
     },
     {
@@ -420,7 +684,23 @@
       "type": "aws_kms",
       "config": {
         "region": "us-west-1",
-        "key_id": "74aa5878-737b-4409-a409-685dccf1800e"
+        "key_id": "LIQUIDATOR_BOT_KMS_KEY_3"
+      }
+    },
+    {
+      "id": "liquidator_bot_4",
+      "type": "aws_kms",
+      "config": {
+        "region": "us-west-1",
+        "key_id": "LIQUIDATOR_BOT_KMS_KEY_4"
+      }
+    },
+    {
+      "id": "liquidator_bot_5",
+      "type": "aws_kms",
+      "config": {
+        "region": "us-west-1",
+        "key_id": "LIQUIDATOR_BOT_KMS_KEY_5"
       }
     }
   ],
