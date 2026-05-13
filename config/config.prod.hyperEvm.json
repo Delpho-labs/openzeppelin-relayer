@@ -539,6 +539,141 @@
         "eip1559_pricing": true,
         "gas_limit_estimation": true
       }
+    },
+    {
+      "id": "debt_curator_hyper_evm_1",
+      "name": "Debt Curator HyperEVM 1",
+      "network": "hyper-evm-mainnet",
+      "paused": false,
+      "signer_id": "debt_curator_1",
+      "network_type": "evm",
+      "custom_rpc_urls": [
+        {
+          "url": "HYPER_EVM_RPC_URL_1",
+          "weight": 100
+        },
+        {
+          "url": "HYPER_EVM_RPC_URL_2",
+          "weight": 100
+        },
+        {
+          "url": "https://rpc.hyperliquid.xyz/evm",
+          "weight": 20
+        }
+      ],
+      "policies": {
+        "min_balance": 1000000000000000000,
+        "eip1559_pricing": true,
+        "gas_limit_estimation": true
+      }
+    },
+    {
+      "id": "debt_curator_hyper_evm_2",
+      "name": "Debt Curator HyperEVM 2",
+      "network": "hyper-evm-mainnet",
+      "paused": false,
+      "signer_id": "debt_curator_2",
+      "network_type": "evm",
+      "custom_rpc_urls": [
+        {
+          "url": "HYPER_EVM_RPC_URL_1",
+          "weight": 100
+        },
+        {
+          "url": "HYPER_EVM_RPC_URL_2",
+          "weight": 100
+        },
+        {
+          "url": "https://rpc.hyperliquid.xyz/evm",
+          "weight": 20
+        }
+      ],
+      "policies": {
+        "min_balance": 1000000000000000000,
+        "eip1559_pricing": true,
+        "gas_limit_estimation": true
+      }
+    },
+    {
+      "id": "debt_curator_hyper_evm_3",
+      "name": "Debt Curator HyperEVM 3",
+      "network": "hyper-evm-mainnet",
+      "paused": false,
+      "signer_id": "debt_curator_3",
+      "network_type": "evm",
+      "custom_rpc_urls": [
+        {
+          "url": "HYPER_EVM_RPC_URL_1",
+          "weight": 100
+        },
+        {
+          "url": "HYPER_EVM_RPC_URL_2",
+          "weight": 100
+        },
+        {
+          "url": "https://rpc.hyperliquid.xyz/evm",
+          "weight": 20
+        }
+      ],
+      "policies": {
+        "min_balance": 1000000000000000000,
+        "eip1559_pricing": true,
+        "gas_limit_estimation": true
+      }
+    },
+    {
+      "id": "debt_curator_hyper_evm_4",
+      "name": "Debt Curator HyperEVM 4",
+      "network": "hyper-evm-mainnet",
+      "paused": false,
+      "signer_id": "debt_curator_4",
+      "network_type": "evm",
+      "custom_rpc_urls": [
+        {
+          "url": "HYPER_EVM_RPC_URL_1",
+          "weight": 100
+        },
+        {
+          "url": "HYPER_EVM_RPC_URL_2",
+          "weight": 100
+        },
+        {
+          "url": "https://rpc.hyperliquid.xyz/evm",
+          "weight": 20
+        }
+      ],
+      "policies": {
+        "min_balance": 1000000000000000000,
+        "eip1559_pricing": true,
+        "gas_limit_estimation": true
+      }
+    },
+    {
+      "id": "debt_curator_hyper_evm_5",
+      "name": "Debt Curator HyperEVM 5",
+      "network": "hyper-evm-mainnet",
+      "paused": false,
+      "signer_id": "debt_curator_5",
+      "network_type": "evm",
+      "custom_rpc_urls": [
+        {
+          "url": "HYPER_EVM_RPC_URL_1",
+          "weight": 100
+        },
+        {
+          "url": "HYPER_EVM_RPC_URL_2",
+          "weight": 100
+        },
+        {
+          "url": "https://rpc.hyperliquid.xyz/evm",
+          "weight": 20
+        }
+      ],
+      "policies": {
+        "min_balance": 1000000000000000000,
+        "eip1559_pricing": true,
+        "gas_limit_estimation": true
+      }
     }
   ],
   "notifications": [],
@@ -701,6 +836,46 @@
       "config": {
         "region": "us-west-1",
         "key_id": "LIQUIDATOR_BOT_KMS_KEY_5"
+      }
+    },
+    {
+      "id": "debt_curator_1",
+      "type": "aws_kms",
+      "config": {
+        "region": "us-west-1",
+        "key_id": "DEBT_CURATOR_KMS_KEY_1"
+      }
+    },
+    {
+      "id": "debt_curator_2",
+      "type": "aws_kms",
+      "config": {
+        "region": "us-west-1",
+        "key_id": "DEBT_CURATOR_KMS_KEY_2"
+      }
+    },
+    {
+      "id": "debt_curator_3",
+      "type": "aws_kms",
+      "config": {
+        "region": "us-west-1",
+        "key_id": "DEBT_CURATOR_KMS_KEY_3"
+      }
+    },
+    {
+      "id": "debt_curator_4",
+      "type": "aws_kms",
+      "config": {
+        "region": "us-west-1",
+        "key_id": "DEBT_CURATOR_KMS_KEY_4"
+      }
+    },
+    {
+      "id": "debt_curator_5",
+      "type": "aws_kms",
+      "config": {
+        "region": "us-west-1",
+        "key_id": "DEBT_CURATOR_KMS_KEY_5"
       }
     }
   ],

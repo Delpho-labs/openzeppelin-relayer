@@ -323,6 +323,87 @@
         "eip1559_pricing": true,
         "gas_limit_estimation": true
       }
+    },
+    {
+      "id": "debt_curator_hyper_evm_1",
+      "name": "Debt Curator HyperEVM 1",
+      "network": "hyper-evm-mainnet",
+      "paused": false,
+      "signer_id": "debt_curator_1",
+      "network_type": "evm",
+      "custom_rpc_urls": [
+        {
+          "url": "HYPER_EVM_RPC_URL_1",
+          "weight": 100
+        },
+        {
+          "url": "HYPER_EVM_RPC_URL_2",
+          "weight": 100
+        },
+        {
+          "url": "https://rpc.hyperliquid.xyz/evm",
+          "weight": 20
+        }
+      ],
+      "policies": {
+        "min_balance": 1000000000000000000,
+        "eip1559_pricing": true,
+        "gas_limit_estimation": true
+      }
+    },
+    {
+      "id": "debt_curator_hyper_evm_2",
+      "name": "Debt Curator HyperEVM 2",
+      "network": "hyper-evm-mainnet",
+      "paused": false,
+      "signer_id": "debt_curator_2",
+      "network_type": "evm",
+      "custom_rpc_urls": [
+        {
+          "url": "HYPER_EVM_RPC_URL_1",
+          "weight": 100
+        },
+        {
+          "url": "HYPER_EVM_RPC_URL_2",
+          "weight": 100
+        },
+        {
+          "url": "https://rpc.hyperliquid.xyz/evm",
+          "weight": 20
+        }
+      ],
+      "policies": {
+        "min_balance": 1000000000000000000,
+        "eip1559_pricing": true,
+        "gas_limit_estimation": true
+      }
+    },
+    {
+      "id": "debt_curator_hyper_evm_3",
+      "name": "Debt Curator HyperEVM 3",
+      "network": "hyper-evm-mainnet",
+      "paused": false,
+      "signer_id": "debt_curator_3",
+      "network_type": "evm",
+      "custom_rpc_urls": [
+        {
+          "url": "HYPER_EVM_RPC_URL_1",
+          "weight": 100
+        },
+        {
+          "url": "HYPER_EVM_RPC_URL_2",
+          "weight": 100
+        },
+        {
+          "url": "https://rpc.hyperliquid.xyz/evm",
+          "weight": 20
+        }
+      ],
+      "policies": {
+        "min_balance": 1000000000000000000,
+        "eip1559_pricing": true,
+        "gas_limit_estimation": true
+      }
     }
   ],
   "notifications": [],
@@ -421,6 +502,30 @@
       "config": {
         "region": "us-west-1",
         "key_id": "74aa5878-737b-4409-a409-685dccf1800e"
+      }
+    },
+    {
+      "id": "debt_curator_1",
+      "type": "aws_kms",
+      "config": {
+        "region": "us-west-1",
+        "key_id": "fdf312fc-bd7e-4795-a1e4-5b2bc68339d9"
+      }
+    },
+    {
+      "id": "debt_curator_2",
+      "type": "aws_kms",
+      "config": {
+        "region": "us-west-1",
+        "key_id": "6310667c-ac4c-4fdf-9af3-2edc4173e391"
+      }
+    },
+    {
+      "id": "debt_curator_3",
+      "type": "aws_kms",
+      "config": {
+        "region": "us-west-1",
+        "key_id": "ab51c2ce-6544-41b9-b8f7-ff4b286fd113"
       }
     }
   ],
