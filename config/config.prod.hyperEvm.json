@@ -22,7 +22,7 @@
         }
       ],
       "policies": {
-        "min_balance": 1000000000000000000,
+        "min_balance": 100000000000000000,
         "eip1559_pricing": true,
         "gas_limit_estimation": true
       }
@@ -49,7 +49,7 @@
         }
       ],
       "policies": {
-        "min_balance": 1000000000000000000,
+        "min_balance": 100000000000000000,
         "eip1559_pricing": true,
         "gas_limit_estimation": true
       }
@@ -76,7 +76,7 @@
         }
       ],
       "policies": {
-        "min_balance": 1000000000000000000,
+        "min_balance": 100000000000000000,
         "eip1559_pricing": true,
         "gas_limit_estimation": true
       }
@@ -103,7 +103,7 @@
         }
       ],
       "policies": {
-        "min_balance": 1000000000000000000,
+        "min_balance": 100000000000000000,
         "eip1559_pricing": true,
         "gas_limit_estimation": true
       }
@@ -130,7 +130,7 @@
         }
       ],
       "policies": {
-        "min_balance": 1000000000000000000,
+        "min_balance": 100000000000000000,
         "eip1559_pricing": true,
         "gas_limit_estimation": true
       }
@@ -157,7 +157,7 @@
         }
       ],
       "policies": {
-        "min_balance": 1000000000000000000,
+        "min_balance": 100000000000000000,
         "eip1559_pricing": true,
         "gas_limit_estimation": true
       }
@@ -184,7 +184,7 @@
         }
       ],
       "policies": {
-        "min_balance": 1000000000000000000,
+        "min_balance": 100000000000000000,
         "eip1559_pricing": true,
         "gas_limit_estimation": true
       }
@@ -211,7 +211,7 @@
         }
       ],
       "policies": {
-        "min_balance": 1000000000000000000,
+        "min_balance": 100000000000000000,
         "eip1559_pricing": true,
         "gas_limit_estimation": true
       }
@@ -238,7 +238,7 @@
         }
       ],
       "policies": {
-        "min_balance": 1000000000000000000,
+        "min_balance": 100000000000000000,
         "eip1559_pricing": true,
         "gas_limit_estimation": true
       }
@@ -265,7 +265,7 @@
         }
       ],
       "policies": {
-        "min_balance": 1000000000000000000,
+        "min_balance": 100000000000000000,
         "eip1559_pricing": true,
         "gas_limit_estimation": true
       }
@@ -292,7 +292,7 @@
         }
       ],
       "policies": {
-        "min_balance": 1000000000000000000,
+        "min_balance": 100000000000000000,
         "eip1559_pricing": true,
         "gas_limit_estimation": true
       }
@@ -319,7 +319,7 @@
         }
       ],
       "policies": {
-        "min_balance": 1000000000000000000,
+        "min_balance": 100000000000000000,
         "eip1559_pricing": true,
         "gas_limit_estimation": true
       }
@@ -346,7 +346,7 @@
         }
       ],
       "policies": {
-        "min_balance": 1000000000000000000,
+        "min_balance": 100000000000000000,
         "eip1559_pricing": true,
         "gas_limit_estimation": true
       }
@@ -373,7 +373,7 @@
         }
       ],
       "policies": {
-        "min_balance": 1000000000000000000,
+        "min_balance": 100000000000000000,
         "eip1559_pricing": true,
         "gas_limit_estimation": true
       }
@@ -400,7 +400,7 @@
         }
       ],
       "policies": {
-        "min_balance": 1000000000000000000,
+        "min_balance": 100000000000000000,
         "eip1559_pricing": true,
         "gas_limit_estimation": true
       }
@@ -427,7 +427,7 @@
         }
       ],
       "policies": {
-        "min_balance": 1000000000000000000,
+        "min_balance": 100000000000000000,
         "eip1559_pricing": true,
         "gas_limit_estimation": true
       }
@@ -454,7 +454,7 @@
         }
       ],
       "policies": {
-        "min_balance": 1000000000000000000,
+        "min_balance": 100000000000000000,
         "eip1559_pricing": true,
         "gas_limit_estimation": true
       }
@@ -481,7 +481,7 @@
         }
       ],
       "policies": {
-        "min_balance": 1000000000000000000,
+        "min_balance": 100000000000000000,
         "eip1559_pricing": true,
         "gas_limit_estimation": true
       }
@@ -508,7 +508,7 @@
         }
       ],
       "policies": {
-        "min_balance": 1000000000000000000,
+        "min_balance": 100000000000000000,
         "eip1559_pricing": true,
         "gas_limit_estimation": true
       }
@@ -535,7 +535,142 @@
         }
       ],
       "policies": {
-        "min_balance": 1000000000000000000,
+        "min_balance": 100000000000000000,
+        "eip1559_pricing": true,
+        "gas_limit_estimation": true
+      }
+    },
+    {
+      "id": "debt_curator_hyper_evm_1",
+      "name": "Debt Curator HyperEVM 1",
+      "network": "hyper-evm-mainnet",
+      "paused": false,
+      "signer_id": "debt_curator_1",
+      "network_type": "evm",
+      "custom_rpc_urls": [
+        {
+          "url": "HYPER_EVM_RPC_URL_1",
+          "weight": 100
+        },
+        {
+          "url": "HYPER_EVM_RPC_URL_2",
+          "weight": 100
+        },
+        {
+          "url": "https://rpc.hyperliquid.xyz/evm",
+          "weight": 20
+        }
+      ],
+      "policies": {
+        "min_balance": 100000000000000000,
+        "eip1559_pricing": true,
+        "gas_limit_estimation": true
+      }
+    },
+    {
+      "id": "debt_curator_hyper_evm_2",
+      "name": "Debt Curator HyperEVM 2",
+      "network": "hyper-evm-mainnet",
+      "paused": false,
+      "signer_id": "debt_curator_2",
+      "network_type": "evm",
+      "custom_rpc_urls": [
+        {
+          "url": "HYPER_EVM_RPC_URL_1",
+          "weight": 100
+        },
+        {
+          "url": "HYPER_EVM_RPC_URL_2",
+          "weight": 100
+        },
+        {
+          "url": "https://rpc.hyperliquid.xyz/evm",
+          "weight": 20
+        }
+      ],
+      "policies": {
+        "min_balance": 100000000000000000,
+        "eip1559_pricing": true,
+        "gas_limit_estimation": true
+      }
+    },
+    {
+      "id": "debt_curator_hyper_evm_3",
+      "name": "Debt Curator HyperEVM 3",
+      "network": "hyper-evm-mainnet",
+      "paused": false,
+      "signer_id": "debt_curator_3",
+      "network_type": "evm",
+      "custom_rpc_urls": [
+        {
+          "url": "HYPER_EVM_RPC_URL_1",
+          "weight": 100
+        },
+        {
+          "url": "HYPER_EVM_RPC_URL_2",
+          "weight": 100
+        },
+        {
+          "url": "https://rpc.hyperliquid.xyz/evm",
+          "weight": 20
+        }
+      ],
+      "policies": {
+        "min_balance": 100000000000000000,
+        "eip1559_pricing": true,
+        "gas_limit_estimation": true
+      }
+    },
+    {
+      "id": "debt_curator_hyper_evm_4",
+      "name": "Debt Curator HyperEVM 4",
+      "network": "hyper-evm-mainnet",
+      "paused": false,
+      "signer_id": "debt_curator_4",
+      "network_type": "evm",
+      "custom_rpc_urls": [
+        {
+          "url": "HYPER_EVM_RPC_URL_1",
+          "weight": 100
+        },
+        {
+          "url": "HYPER_EVM_RPC_URL_2",
+          "weight": 100
+        },
+        {
+          "url": "https://rpc.hyperliquid.xyz/evm",
+          "weight": 20
+        }
+      ],
+      "policies": {
+        "min_balance": 100000000000000000,
+        "eip1559_pricing": true,
+        "gas_limit_estimation": true
+      }
+    },
+    {
+      "id": "debt_curator_hyper_evm_5",
+      "name": "Debt Curator HyperEVM 5",
+      "network": "hyper-evm-mainnet",
+      "paused": false,
+      "signer_id": "debt_curator_5",
+      "network_type": "evm",
+      "custom_rpc_urls": [
+        {
+          "url": "HYPER_EVM_RPC_URL_1",
+          "weight": 100
+        },
+        {
+          "url": "HYPER_EVM_RPC_URL_2",
+          "weight": 100
+        },
+        {
+          "url": "https://rpc.hyperliquid.xyz/evm",
+          "weight": 20
+        }
+      ],
+      "policies": {
+        "min_balance": 100000000000000000,
         "eip1559_pricing": true,
         "gas_limit_estimation": true
       }
@@ -548,7 +683,7 @@
       "type": "aws_kms",
       "config": {
         "region": "us-west-1",
-        "key_id": "HANDLER_KMS_KEY_1"
+        "key_id": "d7f21d00-0003-4581-966b-c5121de50b96"
       }
     },
     {
@@ -556,7 +691,7 @@
       "type": "aws_kms",
       "config": {
         "region": "us-west-1",
-        "key_id": "HANDLER_KMS_KEY_2"
+        "key_id": "abeef052-42da-498f-b59a-4130db93b036"
       }
     },
     {
@@ -564,7 +699,7 @@
       "type": "aws_kms",
       "config": {
         "region": "us-west-1",
-        "key_id": "HANDLER_KMS_KEY_3"
+        "key_id": "3b40056f-9635-413a-a770-c20a7836f96d"
       }
     },
     {
@@ -572,7 +707,7 @@
       "type": "aws_kms",
       "config": {
         "region": "us-west-1",
-        "key_id": "HANDLER_KMS_KEY_4"
+        "key_id": "446bd0e4-c8f7-49a3-9978-9b354a8bcf72"
       }
     },
     {
@@ -580,7 +715,7 @@
       "type": "aws_kms",
       "config": {
         "region": "us-west-1",
-        "key_id": "HANDLER_KMS_KEY_5"
+        "key_id": "6c03e2c0-1ea3-4038-b356-7abab0c2a6ce"
       }
     },
     {
@@ -588,7 +723,7 @@
       "type": "aws_kms",
       "config": {
         "region": "us-west-1",
-        "key_id": "LEVERAGE_BOT_KMS_KEY_1"
+        "key_id": "78a11bcc-7a0b-45fb-b631-ba7d30c5393d"
       }
     },
     {
@@ -596,7 +731,7 @@
       "type": "aws_kms",
       "config": {
         "region": "us-west-1",
-        "key_id": "LEVERAGE_BOT_KMS_KEY_2"
+        "key_id": "77a6730e-de06-4c4d-a823-207358b5160d"
       }
     },
     {
@@ -604,7 +739,7 @@
       "type": "aws_kms",
       "config": {
         "region": "us-west-1",
-        "key_id": "LEVERAGE_BOT_KMS_KEY_3"
+        "key_id": "a86bad38-ab4e-4949-862d-818d589cce7c"
       }
     },
     {
@@ -612,7 +747,7 @@
       "type": "aws_kms",
       "config": {
         "region": "us-west-1",
-        "key_id": "LEVERAGE_BOT_KMS_KEY_4"
+        "key_id": "d52fd3e6-6106-46b4-8098-365c7ea2968e"
       }
     },
     {
@@ -620,7 +755,7 @@
       "type": "aws_kms",
       "config": {
         "region": "us-west-1",
-        "key_id": "LEVERAGE_BOT_KMS_KEY_5"
+        "key_id": "4afe18a6-c433-4949-8a83-26aab2400988"
       }
     },
     {
@@ -628,7 +763,7 @@
       "type": "aws_kms",
       "config": {
         "region": "us-west-1",
-        "key_id": "FUND_ALLOCATOR_KMS_KEY_1"
+        "key_id": "a7f52aa6-fe68-44ab-8a14-8cb0555b9ba4"
       }
     },
     {
@@ -636,7 +771,7 @@
       "type": "aws_kms",
       "config": {
         "region": "us-west-1",
-        "key_id": "FUND_ALLOCATOR_KMS_KEY_2"
+        "key_id": "064bd79c-da2f-49f9-9853-9470e6fb907d"
       }
     },
     {
@@ -644,7 +779,7 @@
       "type": "aws_kms",
       "config": {
         "region": "us-west-1",
-        "key_id": "FUND_ALLOCATOR_KMS_KEY_3"
+        "key_id": "8dfb8681-b37e-4a67-83e2-37b770798d2d"
       }
     },
     {
@@ -652,7 +787,7 @@
       "type": "aws_kms",
       "config": {
         "region": "us-west-1",
-        "key_id": "FUND_ALLOCATOR_KMS_KEY_4"
+        "key_id": "492c7cc4-71f2-4203-8d27-847a51160bae"
       }
     },
     {
@@ -660,7 +795,7 @@
       "type": "aws_kms",
       "config": {
         "region": "us-west-1",
-        "key_id": "FUND_ALLOCATOR_KMS_KEY_5"
+        "key_id": "f23b263e-e264-4eec-a22b-d20ebb0d5cb3"
       }
     },
     {
@@ -668,7 +803,7 @@
       "type": "aws_kms",
       "config": {
         "region": "us-west-1",
-        "key_id": "LIQUIDATOR_BOT_KMS_KEY_1"
+        "key_id": "6e1bc828-b4ac-417a-87bb-f989487a1876"
       }
     },
     {
@@ -676,7 +811,7 @@
       "type": "aws_kms",
       "config": {
         "region": "us-west-1",
-        "key_id": "LIQUIDATOR_BOT_KMS_KEY_2"
+        "key_id": "3dfb7c6b-3c41-46da-85e9-2804a9a507ce"
       }
     },
     {
@@ -684,7 +819,7 @@
       "type": "aws_kms",
       "config": {
         "region": "us-west-1",
-        "key_id": "LIQUIDATOR_BOT_KMS_KEY_3"
+        "key_id": "a9128782-0b61-4c30-a557-6d10f19a4e73"
       }
     },
     {
@@ -692,7 +827,7 @@
       "type": "aws_kms",
       "config": {
         "region": "us-west-1",
-        "key_id": "LIQUIDATOR_BOT_KMS_KEY_4"
+        "key_id": "1ff14951-17e8-47f1-a667-92232711d25f"
       }
     },
     {
@@ -700,7 +835,47 @@
       "type": "aws_kms",
       "config": {
         "region": "us-west-1",
-        "key_id": "LIQUIDATOR_BOT_KMS_KEY_5"
+        "key_id": "eba31c53-0ce8-46ce-8391-1bd99b0c6448"
+      }
+    },
+    {
+      "id": "debt_curator_1",
+      "type": "aws_kms",
+      "config": {
+        "region": "us-west-1",
+        "key_id": "66a43995-20ec-4406-9224-8190c8ecd39f"
+      }
+    },
+    {
+      "id": "debt_curator_2",
+      "type": "aws_kms",
+      "config": {
+        "region": "us-west-1",
+        "key_id": "c97719c4-6410-4991-9fff-622f8e490e2f"
+      }
+    },
+    {
+      "id": "debt_curator_3",
+      "type": "aws_kms",
+      "config": {
+        "region": "us-west-1",
+        "key_id": "870f030b-3ab9-4d43-9dff-ff85ba355410"
+      }
+    },
+    {
+      "id": "debt_curator_4",
+      "type": "aws_kms",
+      "config": {
+        "region": "us-west-1",
+        "key_id": "643c86d7-769d-44bc-b582-cf062ec6e07c"
+      }
+    },
+    {
+      "id": "debt_curator_5",
+      "type": "aws_kms",
+      "config": {
+        "region": "us-west-1",
+        "key_id": "0ab6c65b-09ef-4b97-b8af-1a0d104c01b9"
       }
     }
   ],
