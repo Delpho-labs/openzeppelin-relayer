@@ -1,0 +1,40 @@
+{
+  "networks": [
+    {
+      "average_blocktime_ms": 2000,
+      "chain_id": 998,
+      "explorer_urls": [
+        "https://testnet.purrsec.com"
+      ],
+      "features": ["eip1559"],
+      "is_testnet": true,
+      "network": "hyper-evm-testnet",
+      "required_confirmations": 1,
+      "rpc_urls": [
+        "https://rpc.hyperliquid-testnet.xyz/evm"
+      ],
+      "symbol": "HYPE",
+      "tags": ["L1"],
+      "type": "evm"
+    },
+    {
+      "average_blocktime_ms": 2000,
+      "chain_id": 999,
+      "explorer_urls": [
+        "https://hyperevmscan.io",
+        "https://www.hyperscan.com"
+      ],
+      "features": ["eip1559"],
+      "is_testnet": false,
+      "network": "hyper-evm-mainnet",
+      "required_confirmations": 1,
+      "rpc_urls": [
+        "https://rpc.hyperliquid.xyz/evm",
+        "https://hyperliquid.drpc.org"
+      ],
+      "symbol": "HYPE",
+      "tags": ["L1"],
+      "type": "evm"
+    }
+  ]
+}
