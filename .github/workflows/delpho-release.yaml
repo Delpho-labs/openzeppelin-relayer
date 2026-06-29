@@ -206,3 +206,20 @@ jobs:
           service: ${{ env.ECS_SERVICE }}
           cluster: ${{ env.ECS_CLUSTER }}
           # wait-for-service-stability: true
+  notify-discord:
+        needs: [env-setup, build-and-upload-image, deploy-to-ecs]
+        permissions:
+            contents: read
+        if: always()
+        uses: ./.github/workflows/notify-discord.yml
+        with:
+            status: "${{ 
+              (needs.env-setup.result == 'cancelled' || needs.build-and-upload-image.result == 'cancelled' || needs.deploy-to-ecs.result == 'cancelled') && 'cancelled' ||
+              (needs.env-setup.result == 'success' && needs.build-and-upload-image.result == 'success' && (needs.deploy-to-ecs.result == 'success' || needs.deploy-to-ecs.result == 'skipped')) && 'success' || 
+              'failure'
+             }}"
+            service_name: "Relayer"
+            env_name: ${{ needs.env-setup.outputs.target_env || 'unknown' }}
+            deployment_method: "ECS Task Update"
+        secrets:
+            DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}

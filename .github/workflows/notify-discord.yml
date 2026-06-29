@@ -1,0 +1,100 @@
+name: Discord Notification
+
+on:
+    workflow_call:
+        inputs:
+          status:
+            required: true
+            type: string
+          env_name:
+            required: true
+            type: string
+          service_name:
+            required: true
+            type: string
+          deployment_method:
+            required: true
+            type: string
+        secrets:
+          DISCORD_WEBHOOK_URL:
+            required: true
+
+jobs:
+    notify-discord:
+        runs-on: ubuntu-latest
+        steps:
+          - name: Checkout code
+            uses: actions/checkout@v4
+          - name: Send Notification
+            env:
+              DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+              STATUS_INPUT: ${{ inputs.status }}
+              ENV_NAME_INPUT: ${{ inputs.env_name }}
+              SERVICE_NAME_INPUT: ${{ inputs.service_name }}
+              DEPLOYMENT_METHOD_INPUT: ${{ inputs.deployment_method }}
+            run: |
+                # Handle potential empty env name
+                ENV_NAME=${ENV_NAME_INPUT:-"-"}
+                SERVICE_NAME="$SERVICE_NAME_INPUT"
+
+                if [ "$STATUS_INPUT" == "success" ]; then
+                    STATUS="✅ Success"
+                    COLOR=65280
+                    DESC="${SERVICE_NAME} deployed to ${ENV_NAME}"
+                else
+                    STATUS="❌ Failed"
+                    COLOR=16711680
+                    DESC="${SERVICE_NAME} failed in the ${ENV_NAME} pipeline"
+                fi
+                    
+                # Get commit message
+                COMMIT_MSG=$(git log -1 --pretty=format:"%s" 2>/dev/null || echo "No commit message available")
+
+                # Using jq to build the JSON payload
+                JSON_PAYLOAD=$(jq -n \
+                    --arg status "$STATUS" \
+                    --arg desc "$DESC" \
+                    --argjson color "$COLOR" \
+                    --arg service "$SERVICE_NAME" \
+                    --arg env "$ENV_NAME" \
+                    --arg workflow "${{ github.workflow }}" \
+                    --arg branch "${{ github.ref_name }}" \
+                    --arg commit_sha "${{ github.sha }}" \
+                    --arg commit_url "https://github.com/${{ github.repository }}/commit/${{ github.sha }}" \
+                    --arg deployment_method "$DEPLOYMENT_METHOD_INPUT" \
+                    --arg commit_msg "$COMMIT_MSG" \
+                    --arg actor "${{ github.actor }}" \
+                    --arg actor_url "https://github.com/${{ github.actor }}" \
+                    --arg actor_icon "https://avatars.githubusercontent.com/u/${{ github.actor_id }}?v=4" \
+                    --arg run_url "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+                    --arg timestamp "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
+                    '{
+                    embeds: [{
+                        title: $status,
+                        description: $desc,
+                        color: $color,
+                        fields: [
+                        { name: "Service", value: $service, inline: true },
+                        { name: "Environment", value: $env, inline: true },
+                        { name: "Workflow", value: $workflow, inline: true },
+                        { name: "Branch", value: $branch, inline: true },
+                        { name: "Commit", value: ("[" + $commit_sha + "](" + $commit_url + ")"), inline: true },
+                        { name: "Deployment Method", value: $deployment_method, inline: true },
+                        { name: "Commit Message", value: $commit_msg, inline: false }
+                        ],
+                        author: {
+                        name: $actor,
+                        url: $actor_url,
+                        icon_url: $actor_icon
+                        },
+                        url: $run_url,
+                        timestamp: $timestamp,
+                        footer: {
+                        text: "GitHub Actions Notification"
+                        }
+                    }]
+                    }')
+
+                curl -H "Content-Type: application/json" -X POST -d "$JSON_PAYLOAD" "$DISCORD_WEBHOOK_URL"
+
+
