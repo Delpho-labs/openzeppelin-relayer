@@ -27,7 +27,7 @@ jobs:
         target_env: ${{ steps.env_check.outputs.ENV_NAME_TAG }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 #v6
 
       - name: Check push branch and set environment variables
         id: env_check
@@ -52,7 +52,7 @@ jobs:
     environment: ${{ needs.env-setup.outputs.target_env }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 #v6
 
       - name: Build Docker Image
         run: |
@@ -60,20 +60,20 @@ jobs:
             docker save openzeppeline-relayer-local:${{ github.sha }} > openzeppeline-relayer-image.tar
 
       - name: Upload Image Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 #v4
         with:
             name: openzeppeline-relayer-image
             path: openzeppeline-relayer-image.tar
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a #v4
         with:
             role-to-assume: ${{ secrets.ROLE_TO_ASSUME }}
             aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Login to Amazon ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+        uses: aws-actions/amazon-ecr-login@d539f0932e70871a027e9d5a9d8fc38589180a64  #v2
 
       - name: Tag and Push to ECR
         env:
@@ -92,16 +92,16 @@ jobs:
     steps:
 
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 #v6
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a #v4
         with:
             role-to-assume: ${{ secrets.ROLE_TO_ASSUME }}
             aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Login to Amazon ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+        uses: aws-actions/amazon-ecr-login@d539f0932e70871a027e9d5a9d8fc38589180a64  #v2
 
       - name: Generate config file
         id: generate-config
@@ -193,16 +193,33 @@ jobs:
 
       - name: Fill in the new image ID in the Amazon ECS task definition
         id: task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        uses: aws-actions/amazon-ecs-render-task-definition@6853cfae8c3a7d978fbf68b5a55453395541dfbb  #v1
         with:
           task-definition: task-definition.json
           container-name: ${{ env.CONTAINER_NAME }}
           image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_APP }}:${{ needs.env-setup.outputs.image_tag }}
 
       - name: Deploy Amazon ECS task definition
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        uses: aws-actions/amazon-ecs-deploy-task-definition@a310a830f5c14e583e35d84e4e1ec7dd177c3c9c   #v2
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
           service: ${{ env.ECS_SERVICE }}
           cluster: ${{ env.ECS_CLUSTER }}
           # wait-for-service-stability: true
+  notify-discord:
+        needs: [env-setup, build-and-upload-image, deploy-to-ecs]
+        permissions:
+            contents: read
+        if: always()
+        uses: ./.github/workflows/notify-discord.yml
+        with:
+            status: "${{ 
+              (needs.env-setup.result == 'cancelled' || needs.build-and-upload-image.result == 'cancelled' || needs.deploy-to-ecs.result == 'cancelled') && 'cancelled' ||
+              (needs.env-setup.result == 'success' && needs.build-and-upload-image.result == 'success' && (needs.deploy-to-ecs.result == 'success' || needs.deploy-to-ecs.result == 'skipped')) && 'success' || 
+              'failure'
+             }}"
+            service_name: "Relayer"
+            env_name: ${{ needs.env-setup.outputs.target_env || 'unknown' }}
+            deployment_method: "ECS Task Update"
+        secrets:
+            DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
