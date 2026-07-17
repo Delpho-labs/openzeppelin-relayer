@@ -159,7 +159,7 @@
       "policies": {
         "min_balance": 100000000000000000,
         "eip1559_pricing": true,
-        "gas_limit_estimation": true
+        "gas_limit_estimation": false
       }
     },
     {
@@ -186,7 +186,7 @@
       "policies": {
         "min_balance": 100000000000000000,
         "eip1559_pricing": true,
-        "gas_limit_estimation": true
+        "gas_limit_estimation": false
       }
     },
     {
@@ -213,7 +213,7 @@
       "policies": {
         "min_balance": 100000000000000000,
         "eip1559_pricing": true,
-        "gas_limit_estimation": true
+        "gas_limit_estimation": false
       }
     },
     {
@@ -240,7 +240,7 @@
       "policies": {
         "min_balance": 100000000000000000,
         "eip1559_pricing": true,
-        "gas_limit_estimation": true
+        "gas_limit_estimation": false
       }
     },
     {
@@ -267,7 +267,7 @@
       "policies": {
         "min_balance": 100000000000000000,
         "eip1559_pricing": true,
-        "gas_limit_estimation": true
+        "gas_limit_estimation": false
       }
     },
     {
@@ -674,6 +674,33 @@
         "eip1559_pricing": true,
         "gas_limit_estimation": true
       }
+    },
+    {
+      "id": "redemption_bot_hyper_evm_1",
+      "name": "Redemption Bot HyperEVM 1",
+      "network": "hyper-evm-mainnet",
+      "paused": false,
+      "signer_id": "redemption_bot_1",
+      "network_type": "evm",
+      "custom_rpc_urls": [
+        {
+          "url": "HYPER_EVM_RPC_URL_1",
+          "weight": 100
+        },
+        {
+          "url": "HYPER_EVM_RPC_URL_2",
+          "weight": 100
+        },
+        {
+          "url": "https://rpc.hyperliquid.xyz/evm",
+          "weight": 20
+        }
+      ],
+      "policies": {
+        "min_balance": 100000000000000000,
+        "eip1559_pricing": true,
+        "gas_limit_estimation": true
+      }
     }
   ],
   "notifications": [],
@@ -876,6 +903,14 @@
       "config": {
         "region": "us-west-1",
         "key_id": "0ab6c65b-09ef-4b97-b8af-1a0d104c01b9"
+      }
+    },
+    {
+      "id": "redemption_bot_1",
+      "type": "aws_kms",
+      "config": {
+        "region": "us-west-1",
+        "key_id": "158c5d3b-04fc-44b6-9b52-8fced9ab7528"
       }
     }
   ],
