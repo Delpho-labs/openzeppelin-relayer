@@ -404,6 +404,33 @@
         "eip1559_pricing": true,
         "gas_limit_estimation": true
       }
+    },
+    {
+      "id": "redemption_bot_hyper_evm_1",
+      "name": "Redemption Bot HyperEVM 1",
+      "network": "hyper-evm-mainnet",
+      "paused": false,
+      "signer_id": "redemption_bot_1",
+      "network_type": "evm",
+      "custom_rpc_urls": [
+        {
+          "url": "HYPER_EVM_RPC_URL_1",
+          "weight": 100
+        },
+        {
+          "url": "HYPER_EVM_RPC_URL_2",
+          "weight": 100
+        },
+        {
+          "url": "https://rpc.hyperliquid.xyz/evm",
+          "weight": 20
+        }
+      ],
+      "policies": {
+        "min_balance": 100000000000000000,
+        "eip1559_pricing": true,
+        "gas_limit_estimation": true
+      }
     }
   ],
   "notifications": [],
@@ -526,6 +553,14 @@
       "config": {
         "region": "us-west-1",
         "key_id": "ab51c2ce-6544-41b9-b8f7-ff4b286fd113"
+      }
+    },
+    {
+      "id": "redemption_bot_1",
+      "type": "aws_kms",
+      "config": {
+        "region": "us-west-1",
+        "key_id": "5024e96d-ffc1-4a51-9158-726c551ad5d0"
       }
     }
   ],
