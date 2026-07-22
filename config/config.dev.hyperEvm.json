@@ -560,7 +560,7 @@
       "type": "aws_kms",
       "config": {
         "region": "us-west-1",
-        "key_id": "5024e96d-ffc1-4a51-9158-726c551ad5d0"
+        "key_id": "d4832f2f-1d8a-41d8-a69e-491574d5f2ae"
       }
     }
   ],
