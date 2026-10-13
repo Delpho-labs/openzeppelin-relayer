@@ -41,7 +41,7 @@ USER root
 RUN apk add --no-cache nodejs=~${NODE_VERSION} npm
 ENV PATH="/usr/local/bin:$PATH"
 
-RUN npm install -g pnpm ts-node typescript
+RUN npm install -g pnpm@10.28.1 ts-node typescript
 
 # Copy plugins folder and install dependencies
 COPY --chown=nonroot:nonroot ./plugins /app/plugins
