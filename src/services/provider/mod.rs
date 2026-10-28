@@ -114,6 +114,10 @@ impl ProviderConfig {
 
 /// Pre-configured `reqwest::ClientBuilder` with standard pool, keepalive, TLS,
 /// and redirect settings. Callers chain on extras (e.g., `.timeout(...)`) then `.build()`.
+///
+/// Response compression: the crate-level reqwest `zstd` feature (see Cargo.toml)
+/// makes clients built here send `Accept-Encoding: zstd` and transparently
+/// decompress zstd responses from providers that support it (e.g. QuickNode).
 fn base_rpc_client_builder() -> reqwest::ClientBuilder {
     ReqwestClient::builder()
         .connect_timeout(Duration::from_secs(
@@ -153,19 +157,6 @@ pub fn get_shared_rpc_http_client() -> Result<ReqwestClient, ProviderError> {
         .map_err(|e| ProviderError::NetworkConfiguration(e.clone()))
 }
 
-/// Build a new RPC HTTP client with standard settings plus a per-request timeout.
-/// Use when the provider needs timeouts baked into the client (e.g., EVM via alloy transport).
-pub fn build_rpc_http_client_with_timeout(
-    timeout: Duration,
-) -> Result<ReqwestClient, ProviderError> {
-    base_rpc_client_builder()
-        .timeout(timeout)
-        .build()
-        .map_err(|e| {
-            ProviderError::NetworkConfiguration(format!("Failed to build RPC HTTP client: {e}"))
-        })
-}
-
 #[derive(Error, Debug, Serialize)]
 pub enum ProviderError {
     #[error("RPC client error: {0}")]
@@ -183,7 +174,14 @@ pub enum ProviderError {
     #[error("Request error (HTTP {status_code}): {error}")]
     RequestError { error: String, status_code: u16 },
     #[error("JSON-RPC error (code {code}): {message}")]
-    RpcErrorCode { code: i64, message: String },
+    RpcErrorCode {
+        code: i64,
+        message: String,
+        /// Optional JSON-RPC error `data` (e.g. EVM revert / FailedOp payload).
+        /// Preserved from the upstream response so plugin RPC clients can decode it.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        data: Option<serde_json::Value>,
+    },
     #[error("Transport error: {0}")]
     TransportError(String),
     #[error("Other provider error: {0}")]
@@ -300,10 +298,19 @@ where
 
                 ProviderError::TransportError(transport_err.to_string())
             }
-            RpcError::ErrorResp(json_rpc_err) => ProviderError::RpcErrorCode {
-                code: json_rpc_err.code,
-                message: json_rpc_err.message.to_string(),
-            },
+            RpcError::ErrorResp(json_rpc_err) => {
+                // Preserve JSON-RPC `data` (revert / FailedOp payloads). The previous mapping
+                // dropped it, which forced AA plugins into OPAQUE_REVERT on failed simulations.
+                let data = json_rpc_err
+                    .data
+                    .as_ref()
+                    .and_then(|raw| serde_json::from_str(raw.get()).ok());
+                ProviderError::RpcErrorCode {
+                    code: json_rpc_err.code,
+                    message: json_rpc_err.message.to_string(),
+                    data,
+                }
+            }
             _ => ProviderError::Other(format!("Other RPC error: {err}")),
         }
     }
@@ -488,7 +495,7 @@ pub fn is_retriable_error(error: &ProviderError) -> bool {
         }
 
         // JSON-RPC error codes (EIP-1474)
-        ProviderError::RpcErrorCode { code, message } => {
+        ProviderError::RpcErrorCode { code, message, .. } => {
             match code {
                 // -32002: Resource unavailable — retriable unless the message indicates a
                 // transaction-level rejection (some providers wrap nonce/tx errors here)
@@ -567,6 +574,8 @@ mod tests {
             tags: vec![],
             chain_id: 1337,
             required_confirmations: 1,
+            status_check_initial_delay_seconds: 8,
+            status_check_retry_delay_seconds: 8,
             features: vec![],
             symbol: "ETH".to_string(),
             gas_price_cache: None,
@@ -711,6 +720,37 @@ mod tests {
 
         let provider_error = categorize_reqwest_error(&err);
         assert!(matches!(provider_error, ProviderError::Other(_)));
+    }
+
+    #[actix_rt::test]
+    async fn test_shared_rpc_client_zstd_response_decompression() {
+        let mut mock_server = mockito::Server::new_async().await;
+
+        let body = serde_json::json!({"jsonrpc": "2.0", "id": 1, "result": {"ok": true}});
+        let compressed = zstd::encode_all(body.to_string().as_bytes(), 3).unwrap();
+
+        let mock = mock_server
+            .mock("POST", "/")
+            .match_header(
+                "accept-encoding",
+                mockito::Matcher::Regex("zstd".to_string()),
+            )
+            .with_header("content-encoding", "zstd")
+            .with_body(compressed)
+            .create_async()
+            .await;
+
+        let client = get_shared_rpc_http_client().unwrap();
+        let response = client
+            .post(mock_server.url())
+            .json(&serde_json::json!({"jsonrpc": "2.0", "id": 1, "method": "test"}))
+            .send()
+            .await
+            .unwrap();
+
+        let json: serde_json::Value = response.json().await.unwrap();
+        assert_eq!(json["result"]["ok"], true);
+        mock.assert_async().await;
     }
 
     #[test]
@@ -922,10 +962,100 @@ mod tests {
         let error = ProviderError::RpcErrorCode {
             code: -32000,
             message: "insufficient funds".to_string(),
+            data: None,
         };
         let error_string = format!("{error}");
         assert!(error_string.contains("-32000"));
         assert!(error_string.contains("insufficient funds"));
+    }
+
+    #[test]
+    fn test_from_rpc_error_preserves_error_data() {
+        use alloy::rpc::json_rpc::ErrorPayload;
+        use alloy::transports::RpcError;
+        use serde_json::value::to_raw_value;
+
+        let revert_hex = "0x08c379a0";
+        let payload = ErrorPayload {
+            code: 3,
+            message: "execution reverted".into(),
+            data: Some(to_raw_value(&serde_json::json!(revert_hex)).unwrap()),
+        };
+        let provider_error = ProviderError::from(RpcError::<String>::ErrorResp(payload));
+
+        match provider_error {
+            ProviderError::RpcErrorCode {
+                code,
+                message,
+                data,
+            } => {
+                assert_eq!(code, 3);
+                assert_eq!(message, "execution reverted");
+                assert_eq!(data, Some(serde_json::json!(revert_hex)));
+            }
+            other => panic!("expected RpcErrorCode, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_from_rpc_error_without_data_keeps_none() {
+        use alloy::rpc::json_rpc::ErrorPayload;
+        use alloy::transports::RpcError;
+
+        let payload = ErrorPayload {
+            code: -32601,
+            message: "Method not found".into(),
+            data: None,
+        };
+        let provider_error = ProviderError::from(RpcError::<String>::ErrorResp(payload));
+
+        match provider_error {
+            ProviderError::RpcErrorCode { data, .. } => assert!(data.is_none()),
+            other => panic!("expected RpcErrorCode, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_rpc_error_code_serialization_omits_none_data() {
+        let error = ProviderError::RpcErrorCode {
+            code: -32000,
+            message: "insufficient funds".to_string(),
+            data: None,
+        };
+        let value = serde_json::to_value(&error).expect("serialize");
+        let body = value
+            .get("RpcErrorCode")
+            .expect("externally tagged RpcErrorCode");
+        assert_eq!(body.get("code"), Some(&serde_json::json!(-32000)));
+        assert!(
+            body.get("data").is_none(),
+            "data must be omitted when None: {body}"
+        );
+    }
+
+    #[test]
+    fn test_rpc_error_code_serialization_includes_data() {
+        let data = serde_json::json!({"revert": "0x08c379a0"});
+        let error = ProviderError::RpcErrorCode {
+            code: 3,
+            message: "execution reverted".to_string(),
+            data: Some(data.clone()),
+        };
+        let value = serde_json::to_value(&error).expect("serialize");
+        let body = value
+            .get("RpcErrorCode")
+            .expect("externally tagged RpcErrorCode");
+        assert_eq!(body.get("data"), Some(&data));
+    }
+
+    #[test]
+    fn test_is_retriable_rpc_error_code_ignores_data_payload() {
+        let error = ProviderError::RpcErrorCode {
+            code: -32005,
+            message: "limit exceeded".to_string(),
+            data: Some(serde_json::json!({"retry_after": 1})),
+        };
+        assert!(is_retriable_error(&error));
     }
 
     #[test]
@@ -1414,6 +1544,7 @@ mod tests {
                 let error = ProviderError::RpcErrorCode {
                     code,
                     message: message.to_string(),
+                    data: None,
                 };
                 assert!(
                     !is_retriable_error(&error),
@@ -1425,6 +1556,7 @@ mod tests {
                 let error = ProviderError::RpcErrorCode {
                     code,
                     message: message.to_string(),
+                    data: None,
                 };
                 assert!(
                     is_retriable_error(&error),

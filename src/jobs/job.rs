@@ -4,10 +4,11 @@
 //! - Transaction processing
 //! - Status monitoring
 //! - Notifications
+use crate::constants::DEFAULT_EVM_STATUS_CHECK_RETRY_DELAY_SECONDS;
 use crate::constants::{
     HEALTH_CHECK_ACTION_KEY, HEALTH_CHECK_ACTION_NONCE_HEALTH, HEALTH_CHECK_NONCE_HINT_KEY,
 };
-use crate::models::{NetworkType, WebhookNotification};
+use crate::models::{EvmNetwork, NetworkType, WebhookNotification};
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -24,6 +25,12 @@ pub struct Job<T> {
     pub data: T,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub request_id: Option<String>,
+    /// Unix epoch (seconds) when this job is intended to become available for
+    /// processing. Set by the producer when `scheduled_on` is provided; absent
+    /// for immediate jobs. Consumers use this to compute queue pickup latency
+    /// that excludes intentional scheduling delay.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub available_at: Option<String>,
 }
 
 impl<T> Job<T> {
@@ -35,10 +42,15 @@ impl<T> Job<T> {
             job_type,
             data,
             request_id: None,
+            available_at: None,
         }
     }
     pub fn with_request_id(mut self, id: Option<String>) -> Self {
         self.request_id = id;
+        self
+    }
+    pub fn with_scheduled_on(mut self, scheduled_on: Option<i64>) -> Self {
+        self.available_at = scheduled_on.map(|ts| ts.to_string());
         self
     }
 }
@@ -186,7 +198,16 @@ pub struct TransactionStatusCheck {
     /// Optional for backward compatibility with older queued messages.
     #[serde(default)]
     pub network_type: Option<NetworkType>,
+    /// Delay between healthy, non-final EVM status checks, in seconds. The
+    /// retry backoff starts here and caps at 1.5x. Defaults for messages queued
+    /// before the field existed.
+    #[serde(default = "default_status_check_retry_delay_seconds")]
+    pub status_check_retry_delay_seconds: u64,
     pub metadata: Option<HashMap<String, String>>,
+}
+
+fn default_status_check_retry_delay_seconds() -> u64 {
+    DEFAULT_EVM_STATUS_CHECK_RETRY_DELAY_SECONDS
 }
 
 impl TransactionStatusCheck {
@@ -200,8 +221,25 @@ impl TransactionStatusCheck {
             transaction_id: transaction_id.into(),
             relayer_id: relayer_id.into(),
             network_type: Some(network_type),
+            status_check_retry_delay_seconds: DEFAULT_EVM_STATUS_CHECK_RETRY_DELAY_SECONDS,
             metadata: None,
         }
+    }
+
+    /// Status check for an EVM transaction, carrying the network's retry delay.
+    pub fn for_evm_network(
+        transaction_id: impl Into<String>,
+        relayer_id: impl Into<String>,
+        network: &EvmNetwork,
+    ) -> Self {
+        Self::new(transaction_id, relayer_id, NetworkType::Evm)
+            .with_status_check_retry_delay_seconds(network.status_check_retry_delay_seconds())
+    }
+
+    /// Sets the delay that healthy, non-final status checks back off from.
+    pub fn with_status_check_retry_delay_seconds(mut self, delay_seconds: u64) -> Self {
+        self.status_check_retry_delay_seconds = delay_seconds;
+        self
     }
 
     // Set the metadata for this transaction status check
@@ -371,7 +409,15 @@ mod tests {
         assert_eq!(tx_status.transaction_id, "tx123");
         assert_eq!(tx_status.relayer_id, "relayer-1");
         assert_eq!(tx_status.network_type, Some(NetworkType::Evm));
+        assert_eq!(
+            tx_status.status_check_retry_delay_seconds,
+            DEFAULT_EVM_STATUS_CHECK_RETRY_DELAY_SECONDS
+        );
         assert!(tx_status.metadata.is_none());
+
+        let fast_status = TransactionStatusCheck::new("tx-fast", "relayer-1", NetworkType::Evm)
+            .with_status_check_retry_delay_seconds(5);
+        assert_eq!(fast_status.status_check_retry_delay_seconds, 5);
 
         let mut metadata = HashMap::new();
         metadata.insert("retries".to_string(), "3".to_string());
@@ -398,6 +444,10 @@ mod tests {
         assert_eq!(deserialized.transaction_id, "tx456");
         assert_eq!(deserialized.relayer_id, "relayer-2");
         assert_eq!(deserialized.network_type, None);
+        assert_eq!(
+            deserialized.status_check_retry_delay_seconds,
+            DEFAULT_EVM_STATUS_CHECK_RETRY_DELAY_SECONDS
+        );
         assert!(deserialized.metadata.is_none());
 
         // New messages should include network_type
@@ -416,6 +466,35 @@ mod tests {
         assert_eq!(deserialized.job_type.to_string(), "TransactionRequest");
         assert_eq!(deserialized.data.transaction_id, "tx123");
         assert_eq!(deserialized.data.relayer_id, "relayer-1");
+    }
+
+    #[test]
+    fn test_job_with_scheduled_on_sets_available_at() {
+        let tx_request = TransactionRequest::new("tx123", "relayer-1");
+        let job = Job::new(JobType::TransactionRequest, tx_request).with_scheduled_on(Some(12345));
+
+        assert_eq!(job.available_at.as_deref(), Some("12345"));
+    }
+
+    #[test]
+    fn test_job_serialization_preserves_available_at() {
+        let tx_request = TransactionRequest::new("tx123", "relayer-1");
+        let job = Job::new(JobType::TransactionRequest, tx_request).with_scheduled_on(Some(12345));
+
+        let serialized = serde_json::to_string(&job).unwrap();
+        let deserialized: Job<TransactionRequest> = serde_json::from_str(&serialized).unwrap();
+
+        assert_eq!(deserialized.available_at.as_deref(), Some("12345"));
+    }
+
+    #[test]
+    fn test_job_serialization_omits_available_at_when_not_scheduled() {
+        let tx_request = TransactionRequest::new("tx123", "relayer-1");
+        let job = Job::new(JobType::TransactionRequest, tx_request);
+
+        let serialized = serde_json::to_string(&job).unwrap();
+
+        assert!(!serialized.contains("available_at"));
     }
 
     #[test]
@@ -446,6 +525,7 @@ mod tests {
                     sig: "0x123".to_string(),
                 }),
                 speed: Some(Speed::Fast),
+                is_canceled: None,
             },
         )));
 
@@ -488,6 +568,7 @@ mod tests {
                 max_priority_fee_per_gas: None,
                 signature: None,
                 speed: None,
+                is_canceled: None,
             },
         )));
 

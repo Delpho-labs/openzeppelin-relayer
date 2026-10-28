@@ -33,7 +33,22 @@ use crate::{
 };
 use async_trait::async_trait;
 use eyre::Result;
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+
+/// Stored idempotency record.
+///
+/// The transaction id is chosen before the key is reserved, so the record
+/// always points at the transaction the request creates.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct IdempotencyRecord {
+    /// SHA-256 fingerprint of the canonical request body.
+    pub fingerprint: String,
+    /// Id of the transaction this request creates.
+    pub tx_id: String,
+    /// RFC 3339 time when the key was reserved.
+    pub created_at: String,
+}
 
 /// A trait defining transaction repository operations
 #[async_trait]
@@ -43,6 +58,16 @@ pub trait TransactionRepository: Repository<TransactionRepoModel, String> {
     /// In-memory implementations return `None`.
     fn connection_info(&self) -> Option<(Arc<RedisConnections>, String)> {
         None
+    }
+
+    /// Retrieves a transaction from the primary data source.
+    ///
+    /// Backends without read replicas use the standard repository read.
+    async fn get_by_id_on_primary(
+        &self,
+        id: String,
+    ) -> Result<TransactionRepoModel, RepositoryError> {
+        Repository::get_by_id(self, id).await
     }
 
     /// Find transactions by relayer ID with pagination
@@ -81,6 +106,22 @@ pub trait TransactionRepository: Repository<TransactionRepoModel, String> {
         oldest_first: bool,
     ) -> Result<PaginatedResult<TransactionRepoModel>, RepositoryError>;
 
+    /// Like [`find_by_status_paginated`], but when `exclude_canceled` is true,
+    /// transactions flagged `is_canceled` are removed BEFORE counting and pagination,
+    /// so the returned page and `total` stay consistent (no short/empty pages).
+    ///
+    /// Used by the listing API to hide cancelled-in-progress transactions from
+    /// active-status queries; internal callers use the unfiltered variant so they
+    /// still see the still-active replacement NOOP.
+    async fn find_by_status_paginated_filtered(
+        &self,
+        relayer_id: &str,
+        statuses: &[TransactionStatus],
+        query: PaginationQuery,
+        oldest_first: bool,
+        exclude_canceled: bool,
+    ) -> Result<PaginatedResult<TransactionRepoModel>, RepositoryError>;
+
     /// Find a transaction by relayer ID and nonce
     async fn find_by_nonce(
         &self,
@@ -113,6 +154,18 @@ pub trait TransactionRepository: Repository<TransactionRepoModel, String> {
         tx_id: String,
         update: TransactionUpdateRequest,
     ) -> Result<TransactionRepoModel, RepositoryError>;
+
+    /// Repairs stale Redis status-index entries whose indexed status diverged from
+    /// the persisted transaction body.
+    ///
+    /// Backends where status indexes cannot diverge from transaction bodies should
+    /// use the default no-op implementation.
+    async fn reconcile_stale_status_indexes(
+        &self,
+        _relayer_id: &str,
+    ) -> Result<usize, RepositoryError> {
+        Ok(0)
+    }
 
     /// Update the network data of a transaction
     async fn update_network_data(
@@ -200,6 +253,36 @@ pub trait TransactionRepository: Repository<TransactionRepoModel, String> {
         &self,
         requests: Vec<TransactionDeleteRequest>,
     ) -> Result<BatchDeleteResult, RepositoryError>;
+
+    /// Reserves an idempotency key for a relayer.
+    ///
+    /// Returns `true` when the key was newly reserved, `false` when it already exists.
+    async fn reserve_idempotency_key(
+        &self,
+        relayer_id: &str,
+        key: &str,
+        record: &IdempotencyRecord,
+        ttl_seconds: u64,
+    ) -> Result<bool, RepositoryError>;
+
+    /// Returns the idempotency record for a relayer and key, if present.
+    async fn get_idempotency_record(
+        &self,
+        relayer_id: &str,
+        key: &str,
+    ) -> Result<Option<IdempotencyRecord>, RepositoryError>;
+
+    /// Deletes an idempotency key only if no transaction with `tx_id` exists.
+    ///
+    /// Reads the primary store. Returns `true` when the key was deleted. A key
+    /// whose transaction was stored stays reserved, so a retry replays that
+    /// transaction instead of creating a second one.
+    async fn release_idempotency_key_if_unused(
+        &self,
+        relayer_id: &str,
+        key: &str,
+        tx_id: &str,
+    ) -> Result<bool, RepositoryError>;
 }
 
 #[cfg(test)]
@@ -222,13 +305,19 @@ mockall::mock! {
   #[async_trait]
   impl TransactionRepository for TransactionRepository {
       fn connection_info(&self) -> Option<(Arc<RedisConnections>, String)>;
+      async fn get_by_id_on_primary(&self, id: String) -> Result<TransactionRepoModel, RepositoryError>;
       async fn find_by_relayer_id(&self, relayer_id: &str, query: PaginationQuery) -> Result<PaginatedResult<TransactionRepoModel>, RepositoryError>;
       async fn find_by_status(&self, relayer_id: &str, statuses: &[TransactionStatus]) -> Result<Vec<TransactionRepoModel>, RepositoryError>;
       async fn find_by_status_paginated(&self, relayer_id: &str, statuses: &[TransactionStatus], query: PaginationQuery, oldest_first: bool) -> Result<PaginatedResult<TransactionRepoModel>, RepositoryError>;
+      async fn find_by_status_paginated_filtered(&self, relayer_id: &str, statuses: &[TransactionStatus], query: PaginationQuery, oldest_first: bool, exclude_canceled: bool) -> Result<PaginatedResult<TransactionRepoModel>, RepositoryError>;
       async fn find_by_nonce(&self, relayer_id: &str, nonce: u64) -> Result<Option<TransactionRepoModel>, RepositoryError>;
       async fn get_nonce_occupancy(&self, relayer_id: &str, from_nonce: u64, to_nonce: u64) -> Result<Vec<(u64, Option<TransactionStatus>)>, RepositoryError>;
       async fn update_status(&self, tx_id: String, status: TransactionStatus) -> Result<TransactionRepoModel, RepositoryError>;
       async fn partial_update(&self, tx_id: String, update: TransactionUpdateRequest) -> Result<TransactionRepoModel, RepositoryError>;
+      async fn reconcile_stale_status_indexes(&self, relayer_id: &str) -> Result<usize, RepositoryError>;
+      async fn reserve_idempotency_key(&self, relayer_id: &str, key: &str, record: &IdempotencyRecord, ttl_seconds: u64) -> Result<bool, RepositoryError>;
+      async fn get_idempotency_record(&self, relayer_id: &str, key: &str) -> Result<Option<IdempotencyRecord>, RepositoryError>;
+      async fn release_idempotency_key_if_unused(&self, relayer_id: &str, key: &str, tx_id: &str) -> Result<bool, RepositoryError>;
       async fn update_network_data(&self, tx_id: String, network_data: NetworkTransactionData) -> Result<TransactionRepoModel, RepositoryError>;
       async fn set_sent_at(&self, tx_id: String, sent_at: String) -> Result<TransactionRepoModel, RepositoryError>;
       async fn increment_status_check_failures(&self, tx_id: String) -> Result<TransactionRepoModel, RepositoryError>;
@@ -296,6 +385,16 @@ impl TransactionRepository for TransactionRepositoryStorage {
             .map(|(connections, key_prefix)| (connections, key_prefix.to_string()))
     }
 
+    async fn get_by_id_on_primary(
+        &self,
+        id: String,
+    ) -> Result<TransactionRepoModel, RepositoryError> {
+        match self {
+            TransactionRepositoryStorage::InMemory(repo) => repo.get_by_id_on_primary(id).await,
+            TransactionRepositoryStorage::Redis(repo) => repo.get_by_id_on_primary(id).await,
+        }
+    }
+
     async fn find_by_relayer_id(
         &self,
         relayer_id: &str,
@@ -341,6 +440,38 @@ impl TransactionRepository for TransactionRepositoryStorage {
             TransactionRepositoryStorage::Redis(repo) => {
                 repo.find_by_status_paginated(relayer_id, statuses, query, oldest_first)
                     .await
+            }
+        }
+    }
+
+    async fn find_by_status_paginated_filtered(
+        &self,
+        relayer_id: &str,
+        statuses: &[TransactionStatus],
+        query: PaginationQuery,
+        oldest_first: bool,
+        exclude_canceled: bool,
+    ) -> Result<PaginatedResult<TransactionRepoModel>, RepositoryError> {
+        match self {
+            TransactionRepositoryStorage::InMemory(repo) => {
+                repo.find_by_status_paginated_filtered(
+                    relayer_id,
+                    statuses,
+                    query,
+                    oldest_first,
+                    exclude_canceled,
+                )
+                .await
+            }
+            TransactionRepositoryStorage::Redis(repo) => {
+                repo.find_by_status_paginated_filtered(
+                    relayer_id,
+                    statuses,
+                    query,
+                    oldest_first,
+                    exclude_canceled,
+                )
+                .await
             }
         }
     }
@@ -399,6 +530,20 @@ impl TransactionRepository for TransactionRepositoryStorage {
                 repo.partial_update(tx_id, update).await
             }
             TransactionRepositoryStorage::Redis(repo) => repo.partial_update(tx_id, update).await,
+        }
+    }
+
+    async fn reconcile_stale_status_indexes(
+        &self,
+        relayer_id: &str,
+    ) -> Result<usize, RepositoryError> {
+        match self {
+            TransactionRepositoryStorage::InMemory(repo) => {
+                repo.reconcile_stale_status_indexes(relayer_id).await
+            }
+            TransactionRepositoryStorage::Redis(repo) => {
+                repo.reconcile_stale_status_indexes(relayer_id).await
+            }
         }
     }
 
@@ -534,6 +679,58 @@ impl TransactionRepository for TransactionRepositoryStorage {
         match self {
             TransactionRepositoryStorage::InMemory(repo) => repo.delete_by_requests(requests).await,
             TransactionRepositoryStorage::Redis(repo) => repo.delete_by_requests(requests).await,
+        }
+    }
+
+    async fn reserve_idempotency_key(
+        &self,
+        relayer_id: &str,
+        key: &str,
+        record: &IdempotencyRecord,
+        ttl_seconds: u64,
+    ) -> Result<bool, RepositoryError> {
+        match self {
+            TransactionRepositoryStorage::InMemory(repo) => {
+                repo.reserve_idempotency_key(relayer_id, key, record, ttl_seconds)
+                    .await
+            }
+            TransactionRepositoryStorage::Redis(repo) => {
+                repo.reserve_idempotency_key(relayer_id, key, record, ttl_seconds)
+                    .await
+            }
+        }
+    }
+
+    async fn get_idempotency_record(
+        &self,
+        relayer_id: &str,
+        key: &str,
+    ) -> Result<Option<IdempotencyRecord>, RepositoryError> {
+        match self {
+            TransactionRepositoryStorage::InMemory(repo) => {
+                repo.get_idempotency_record(relayer_id, key).await
+            }
+            TransactionRepositoryStorage::Redis(repo) => {
+                repo.get_idempotency_record(relayer_id, key).await
+            }
+        }
+    }
+
+    async fn release_idempotency_key_if_unused(
+        &self,
+        relayer_id: &str,
+        key: &str,
+        tx_id: &str,
+    ) -> Result<bool, RepositoryError> {
+        match self {
+            TransactionRepositoryStorage::InMemory(repo) => {
+                repo.release_idempotency_key_if_unused(relayer_id, key, tx_id)
+                    .await
+            }
+            TransactionRepositoryStorage::Redis(repo) => {
+                repo.release_idempotency_key_if_unused(relayer_id, key, tx_id)
+                    .await
+            }
         }
     }
 }

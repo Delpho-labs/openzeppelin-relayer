@@ -41,17 +41,22 @@ pub use tower::util::rng::HasherRng;
 
 use apalis_cron::CronStream;
 use eyre::Result;
-use std::{str::FromStr, time::Duration};
+use std::{str::FromStr, sync::LazyLock, time::Duration};
 use tokio::signal::unix::SignalKind;
 use tracing::{debug, error, info};
+use uuid::Uuid;
 
+use crate::metrics::observe_queue_pickup_latency;
+
+use super::status_retry_policy::EvmStatusRetryPolicy;
 use super::{filter_relayers_for_swap, QueueType, WorkerContext};
 use crate::queues::retry_config::{
-    RetryBackoffConfig, NOTIFICATION_BACKOFF, RELAYER_HEALTH_BACKOFF, STATUS_EVM_BACKOFF,
-    STATUS_GENERIC_BACKOFF, STATUS_STELLAR_BACKOFF, SYSTEM_CLEANUP_BACKOFF,
+    stellar_status_backoff_config, RetryBackoffConfig, NOTIFICATION_BACKOFF,
+    RELAYER_HEALTH_BACKOFF, STATUS_EVM_BACKOFF, STATUS_GENERIC_BACKOFF, SYSTEM_CLEANUP_BACKOFF,
     TOKEN_SWAP_CRON_BACKOFF, TOKEN_SWAP_REQUEST_BACKOFF, TX_CLEANUP_BACKOFF, TX_REQUEST_BACKOFF,
     TX_SUBMISSION_BACKOFF,
 };
+use crate::queues::WorkerHandle;
 
 // ---------------------------------------------------------------------------
 // Apalis adapter functions
@@ -62,12 +67,71 @@ use crate::queues::retry_config::{
 // keeping all handler business logic backend-neutral.
 // ---------------------------------------------------------------------------
 
+/// Sanity threshold (ms) for non-scheduled latency observations.
+///
+/// Latencies above this for a job whose only baseline was `Job.timestamp`
+/// almost certainly indicate clock skew between producer and consumer rather
+/// than a real backlog of that duration. We still observe the value (so the
+/// `+Inf` bucket reflects reality), but log a warning so operators can detect
+/// bad data instead of alerting on it.
+const PICKUP_LATENCY_CLOCK_SKEW_THRESHOLD_MS: i64 = 60 * 60 * 1000;
+
+/// Observe queue pickup latency for Redis/Apalis workers.
+///
+/// Uses `available_at` (the intended availability time) when present to exclude
+/// intentional scheduling delay. Falls back to `timestamp` (job creation time)
+/// for immediate jobs. Only records on the initial attempt — apalis
+/// `Attempt::current()` is 1-indexed, so `attempt == 1` is the first delivery;
+/// subsequent attempts would inflate the metric with retry backoff time.
+///
+/// If the chosen baseline fails to parse, the alternative is tried so a single
+/// corrupted field cannot silently drop the observation.
+fn observe_redis_pickup_latency(
+    attempt: usize,
+    available_at: Option<&String>,
+    job_timestamp: &str,
+    queue_type: &str,
+) {
+    if attempt != 1 {
+        return;
+    }
+    let baseline_epoch_secs = available_at
+        .and_then(|s| s.parse::<i64>().ok())
+        .or_else(|| job_timestamp.parse::<i64>().ok());
+    let Some(baseline_epoch_secs) = baseline_epoch_secs else {
+        tracing::warn!(
+            queue_type = queue_type,
+            available_at = ?available_at,
+            job_timestamp = %job_timestamp,
+            "skipping queue_pickup_latency: failed to parse both available_at and job_timestamp"
+        );
+        return;
+    };
+    let now_ms = chrono::Utc::now().timestamp_millis();
+    let delta_ms = now_ms - baseline_epoch_secs * 1000;
+    if available_at.is_none() && delta_ms > PICKUP_LATENCY_CLOCK_SKEW_THRESHOLD_MS {
+        tracing::warn!(
+            queue_type = queue_type,
+            latency_ms = delta_ms,
+            "queue_pickup_latency above sanity threshold for non-scheduled job; check producer/consumer clock skew"
+        );
+    }
+    let latency_secs = delta_ms.max(0) as f64 / 1000.0;
+    observe_queue_pickup_latency(queue_type, "redis", latency_secs);
+}
+
 async fn apalis_transaction_request_handler(
     job: Job<TransactionRequest>,
     state: Data<ThinData<DefaultAppState>>,
     attempt: Attempt,
     task_id: TaskId,
 ) -> Result<(), apalis::prelude::Error> {
+    observe_redis_pickup_latency(
+        attempt.current(),
+        job.available_at.as_ref(),
+        &job.timestamp,
+        QueueType::TransactionRequest.queue_name(),
+    );
     let ctx = WorkerContext::new(attempt.current(), task_id.to_string());
     transaction_request_handler(job, (*state).clone(), ctx)
         .await
@@ -80,6 +144,12 @@ async fn apalis_transaction_submission_handler(
     attempt: Attempt,
     task_id: TaskId,
 ) -> Result<(), apalis::prelude::Error> {
+    observe_redis_pickup_latency(
+        attempt.current(),
+        job.available_at.as_ref(),
+        &job.timestamp,
+        QueueType::TransactionSubmission.queue_name(),
+    );
     let ctx = WorkerContext::new(attempt.current(), task_id.to_string());
     transaction_submission_handler(job, (*state).clone(), ctx)
         .await
@@ -92,6 +162,48 @@ async fn apalis_transaction_status_handler(
     attempt: Attempt,
     task_id: TaskId,
 ) -> Result<(), apalis::prelude::Error> {
+    observe_redis_pickup_latency(
+        attempt.current(),
+        job.available_at.as_ref(),
+        &job.timestamp,
+        QueueType::StatusCheck.queue_name(),
+    );
+    let ctx = WorkerContext::new(attempt.current(), task_id.to_string());
+    transaction_status_handler(job, (*state).clone(), ctx)
+        .await
+        .map_err(Into::into)
+}
+
+async fn apalis_transaction_status_evm_handler(
+    job: Job<TransactionStatusCheck>,
+    state: Data<ThinData<DefaultAppState>>,
+    attempt: Attempt,
+    task_id: TaskId,
+) -> Result<(), apalis::prelude::Error> {
+    observe_redis_pickup_latency(
+        attempt.current(),
+        job.available_at.as_ref(),
+        &job.timestamp,
+        QueueType::StatusCheckEvm.queue_name(),
+    );
+    let ctx = WorkerContext::new(attempt.current(), task_id.to_string());
+    transaction_status_handler(job, (*state).clone(), ctx)
+        .await
+        .map_err(Into::into)
+}
+
+async fn apalis_transaction_status_stellar_handler(
+    job: Job<TransactionStatusCheck>,
+    state: Data<ThinData<DefaultAppState>>,
+    attempt: Attempt,
+    task_id: TaskId,
+) -> Result<(), apalis::prelude::Error> {
+    observe_redis_pickup_latency(
+        attempt.current(),
+        job.available_at.as_ref(),
+        &job.timestamp,
+        QueueType::StatusCheckStellar.queue_name(),
+    );
     let ctx = WorkerContext::new(attempt.current(), task_id.to_string());
     transaction_status_handler(job, (*state).clone(), ctx)
         .await
@@ -104,6 +216,12 @@ async fn apalis_notification_handler(
     attempt: Attempt,
     task_id: TaskId,
 ) -> Result<(), apalis::prelude::Error> {
+    observe_redis_pickup_latency(
+        attempt.current(),
+        job.available_at.as_ref(),
+        &job.timestamp,
+        QueueType::Notification.queue_name(),
+    );
     let ctx = WorkerContext::new(attempt.current(), task_id.to_string());
     notification_handler(job, (*state).clone(), ctx)
         .await
@@ -116,6 +234,12 @@ async fn apalis_token_swap_request_handler(
     attempt: Attempt,
     task_id: TaskId,
 ) -> Result<(), apalis::prelude::Error> {
+    observe_redis_pickup_latency(
+        attempt.current(),
+        job.available_at.as_ref(),
+        &job.timestamp,
+        QueueType::TokenSwapRequest.queue_name(),
+    );
     let ctx = WorkerContext::new(attempt.current(), task_id.to_string());
     token_swap_request_handler(job, (*state).clone(), ctx)
         .await
@@ -128,6 +252,12 @@ async fn apalis_relayer_health_check_handler(
     attempt: Attempt,
     task_id: TaskId,
 ) -> Result<(), apalis::prelude::Error> {
+    observe_redis_pickup_latency(
+        attempt.current(),
+        job.available_at.as_ref(),
+        &job.timestamp,
+        QueueType::RelayerHealthCheck.queue_name(),
+    );
     let ctx = WorkerContext::new(attempt.current(), task_id.to_string());
     relayer_health_check_handler(job, (*state).clone(), ctx)
         .await
@@ -189,6 +319,19 @@ const TRANSACTION_CLEANUP: &str = "transaction_cleanup";
 const RELAYER_HEALTH_CHECK: &str = "relayer_health_check";
 const SYSTEM_CLEANUP: &str = "system_cleanup";
 
+/// Distinguishes this process from overlapping replicas of the relayer.
+///
+/// Apalis uses the worker ID as the Redis consumer identity and as part of the
+/// in-flight job key. Reusing an ID lets a replacement process refresh the same
+/// consumer heartbeat, so abandoned jobs may never become eligible for periodic
+/// orphan recovery.
+static WORKER_INSTANCE_ID: LazyLock<Uuid> = LazyLock::new(Uuid::new_v4);
+
+/// Builds a worker name scoped to the current process instance.
+fn worker_id(role: &str) -> String {
+    format!("{role}-{}", *WORKER_INSTANCE_ID)
+}
+
 /// Creates an exponential backoff with configurable parameters
 ///
 /// # Arguments
@@ -217,9 +360,14 @@ fn create_backoff_from_config(cfg: RetryBackoffConfig) -> Result<ExponentialBack
 ///
 /// # Arguments
 /// * `app_state` - Application state containing the job producer and configuration
+/// * `shutdown_rx` - Backend-level shutdown signal (mirrors the SQS/PubSub `watch`
+///   pattern). Selected alongside SIGINT/SIGTERM so `QueueBackend::shutdown()` can
+///   stop this monitor on a programmatic shutdown, not just on an OS signal.
 pub async fn initialize_redis_workers<J, RR, TR, NR, NFR, SR, TCR, PR, AKR>(
     app_state: ThinDataAppState<J, RR, TR, NR, NFR, SR, TCR, PR, AKR>,
-) -> Result<()>
+    handle: tokio::runtime::Handle,
+    mut shutdown_rx: tokio::sync::watch::Receiver<bool>,
+) -> Result<WorkerHandle>
 where
     J: JobProducerTrait + Send + Sync + 'static,
     RR: RelayerRepository + Repository<RelayerRepoModel, String> + Send + Sync + 'static,
@@ -240,7 +388,7 @@ where
         .cloned()
         .ok_or_else(|| eyre::eyre!("Redis queue is not available for active backend"))?;
 
-    let transaction_request_queue_worker = WorkerBuilder::new(TRANSACTION_REQUEST)
+    let transaction_request_queue_worker = WorkerBuilder::new(worker_id(TRANSACTION_REQUEST))
         .layer(ErrorHandlingLayer::new())
         .retry(
             RetryPolicy::retries(QueueType::TransactionRequest.max_retries())
@@ -256,7 +404,7 @@ where
         .backend(queue.transaction_request_queue.clone())
         .build_fn(apalis_transaction_request_handler);
 
-    let transaction_submission_queue_worker = WorkerBuilder::new(TRANSACTION_SENDER)
+    let transaction_submission_queue_worker = WorkerBuilder::new(worker_id(TRANSACTION_SENDER))
         .layer(ErrorHandlingLayer::new())
         .enable_tracing()
         .catch_panic()
@@ -274,7 +422,7 @@ where
 
     // Generic status checker
     // Uses medium settings that work reasonably for most chains
-    let transaction_status_queue_worker = WorkerBuilder::new(TRANSACTION_STATUS_CHECKER)
+    let transaction_status_queue_worker = WorkerBuilder::new(worker_id(TRANSACTION_STATUS_CHECKER))
         .layer(ErrorHandlingLayer::new())
         .enable_tracing()
         .catch_panic()
@@ -292,32 +440,32 @@ where
 
     // EVM status checker - slower retries to avoid premature resubmission
     // EVM has longer block times (~12s) and needs time for resubmission logic
-    let transaction_status_queue_worker_evm = WorkerBuilder::new(TRANSACTION_STATUS_CHECKER_EVM)
-        .layer(ErrorHandlingLayer::new())
-        .enable_tracing()
-        .catch_panic()
-        .retry(
-            RetryPolicy::retries(QueueType::StatusCheck.max_retries())
-                .with_backoff(create_backoff_from_config(STATUS_EVM_BACKOFF)?.make_backoff()),
-        )
-        .concurrency(ServerConfig::get_worker_concurrency(
-            QueueType::StatusCheckEvm.concurrency_env_key(),
-            QueueType::StatusCheckEvm.default_concurrency(),
-        ))
-        .data(app_state.clone())
-        .backend(queue.transaction_status_queue_evm.clone())
-        .build_fn(apalis_transaction_status_handler);
+    let transaction_status_queue_worker_evm =
+        WorkerBuilder::new(worker_id(TRANSACTION_STATUS_CHECKER_EVM))
+            .layer(ErrorHandlingLayer::new())
+            .enable_tracing()
+            .catch_panic()
+            .retry(EvmStatusRetryPolicy::new(
+                create_backoff_from_config(STATUS_EVM_BACKOFF)?.make_backoff(),
+            ))
+            .concurrency(ServerConfig::get_worker_concurrency(
+                QueueType::StatusCheckEvm.concurrency_env_key(),
+                QueueType::StatusCheckEvm.default_concurrency(),
+            ))
+            .data(app_state.clone())
+            .backend(queue.transaction_status_queue_evm.clone())
+            .build_fn(apalis_transaction_status_evm_handler);
 
     // Stellar status checker - fast retries for fast finality
     // Stellar has sub-second finality, needs more frequent status checks
     let transaction_status_queue_worker_stellar =
-        WorkerBuilder::new(TRANSACTION_STATUS_CHECKER_STELLAR)
+        WorkerBuilder::new(worker_id(TRANSACTION_STATUS_CHECKER_STELLAR))
             .layer(ErrorHandlingLayer::new())
             .enable_tracing()
             .catch_panic()
             .retry(
                 RetryPolicy::retries(QueueType::StatusCheckStellar.max_retries()).with_backoff(
-                    create_backoff_from_config(STATUS_STELLAR_BACKOFF)?.make_backoff(),
+                    create_backoff_from_config(stellar_status_backoff_config())?.make_backoff(),
                 ),
             )
             .concurrency(ServerConfig::get_worker_concurrency(
@@ -326,9 +474,9 @@ where
             ))
             .data(app_state.clone())
             .backend(queue.transaction_status_queue_stellar.clone())
-            .build_fn(apalis_transaction_status_handler);
+            .build_fn(apalis_transaction_status_stellar_handler);
 
-    let notification_queue_worker = WorkerBuilder::new(NOTIFICATION_SENDER)
+    let notification_queue_worker = WorkerBuilder::new(worker_id(NOTIFICATION_SENDER))
         .layer(ErrorHandlingLayer::new())
         .enable_tracing()
         .catch_panic()
@@ -344,7 +492,7 @@ where
         .backend(queue.notification_queue.clone())
         .build_fn(apalis_notification_handler);
 
-    let token_swap_request_queue_worker = WorkerBuilder::new(TOKEN_SWAP_REQUEST)
+    let token_swap_request_queue_worker = WorkerBuilder::new(worker_id(TOKEN_SWAP_REQUEST))
         .layer(ErrorHandlingLayer::new())
         .enable_tracing()
         .catch_panic()
@@ -391,7 +539,7 @@ where
         )?))
         .build_fn(apalis_system_cleanup_handler);
 
-    let relayer_health_check_worker = WorkerBuilder::new(RELAYER_HEALTH_CHECK)
+    let relayer_health_check_worker = WorkerBuilder::new(worker_id(RELAYER_HEALTH_CHECK))
         .layer(ErrorHandlingLayer::new())
         .enable_tracing()
         .catch_panic()
@@ -421,7 +569,7 @@ where
         .on_event(monitor_handle_event)
         .shutdown_timeout(Duration::from_millis(5000));
 
-    let monitor_future = monitor.run_with_signal(async {
+    let monitor_future = monitor.run_with_signal(async move {
         let mut sigint = tokio::signal::unix::signal(SignalKind::interrupt())
             .map_err(|e| std::io::Error::other(format!("Failed to create SIGINT signal: {e}")))?;
         let mut sigterm = tokio::signal::unix::signal(SignalKind::terminate())
@@ -432,27 +580,37 @@ where
         tokio::select! {
             _ = sigint.recv() => debug!("Received SIGINT."),
             _ = sigterm.recv() => debug!("Received SIGTERM."),
+            _ = shutdown_rx.changed() => debug!("Received programmatic shutdown signal."),
         };
 
         debug!("Workers monitor shutting down");
 
         Ok(())
     });
-    tokio::spawn(async move {
+    // Re-home the apalis Monitor onto the multi-thread pipeline runtime so its
+    // queue workers distribute across worker threads instead of pinning to the
+    // actix System arbiter's single thread. The JoinHandle is returned so the
+    // Monitor can be joined on graceful shutdown (drain in-flight work).
+    let monitor_handle = handle.spawn(async move {
         if let Err(e) = monitor_future.await {
             error!(error = %e, "monitor error");
         }
     });
-    debug!("Workers monitor shutdown complete");
+    debug!("Workers monitor spawned on pipeline runtime");
 
-    Ok(())
+    Ok(WorkerHandle::Tokio(monitor_handle))
 }
 
 /// Initializes swap workers for Solana and Stellar relayers.
 /// This function creates and registers workers for relayers that have swap enabled and cron schedule set.
+///
+/// `shutdown_rx` mirrors the SQS/PubSub `watch` shutdown pattern (see
+/// [`initialize_redis_workers`]).
 pub async fn initialize_redis_token_swap_workers<J, RR, TR, NR, NFR, SR, TCR, PR, AKR>(
     app_state: ThinDataAppState<J, RR, TR, NR, NFR, SR, TCR, PR, AKR>,
-) -> Result<()>
+    handle: tokio::runtime::Handle,
+    mut shutdown_rx: tokio::sync::watch::Receiver<bool>,
+) -> Result<Option<WorkerHandle>>
 where
     J: JobProducerTrait + Send + Sync + 'static,
     RR: RelayerRepository + Repository<RelayerRepoModel, String> + Send + Sync + 'static,
@@ -469,7 +627,7 @@ where
 
     if relayers_with_swap_enabled.is_empty() {
         debug!("No relayers with swap enabled");
-        return Ok(());
+        return Ok(None);
     }
     info!(
         "Found {} relayers with swap enabled",
@@ -560,7 +718,7 @@ where
         monitor = monitor.register(worker);
     }
 
-    let monitor_future = monitor.run_with_signal(async {
+    let monitor_future = monitor.run_with_signal(async move {
         let mut sigint = tokio::signal::unix::signal(SignalKind::interrupt())
             .map_err(|e| std::io::Error::other(format!("Failed to create SIGINT signal: {e}")))?;
         let mut sigterm = tokio::signal::unix::signal(SignalKind::terminate())
@@ -571,18 +729,19 @@ where
         tokio::select! {
             _ = sigint.recv() => debug!("Received SIGINT."),
             _ = sigterm.recv() => debug!("Received SIGTERM."),
+            _ = shutdown_rx.changed() => debug!("Received programmatic shutdown signal."),
         };
 
         debug!("Swap Monitor shutting down");
 
         Ok(())
     });
-    tokio::spawn(async move {
+    let monitor_handle = handle.spawn(async move {
         if let Err(e) = monitor_future.await {
             error!(error = %e, "monitor error");
         }
     });
-    Ok(())
+    Ok(Some(WorkerHandle::Tokio(monitor_handle)))
 }
 
 fn monitor_handle_event(e: Worker<Event>) {
@@ -856,6 +1015,16 @@ mod tests {
     }
 
     #[test]
+    fn test_worker_id_contains_role_and_process_instance() {
+        let id = worker_id(TRANSACTION_STATUS_CHECKER_EVM);
+        let instance_id = id
+            .strip_prefix("transaction_status_checker_evm-")
+            .expect("worker ID should start with its role and a separator");
+
+        assert_eq!(Uuid::parse_str(instance_id).unwrap(), *WORKER_INSTANCE_ID);
+    }
+
+    #[test]
     fn test_worker_names_match_concurrency_env_keys() {
         // The WorkerBuilder name for each queue-type-backed worker should match
         // the concurrency_env_key used with ServerConfig::get_worker_concurrency,
@@ -936,5 +1105,99 @@ mod tests {
     #[test]
     fn test_monitor_handle_event_custom_does_not_panic() {
         monitor_handle_event(make_worker_event(Event::Custom("test-custom".to_string())));
+    }
+
+    // ── observe_redis_pickup_latency tests ─────────────────────────────
+
+    fn pickup_sample_count(queue_type: &str) -> u64 {
+        crate::metrics::QUEUE_PICKUP_LATENCY
+            .with_label_values(&[queue_type, "redis"])
+            .get_sample_count()
+    }
+
+    #[test]
+    fn test_observe_redis_pickup_latency_records_on_first_attempt() {
+        let queue = "test-pickup-first-attempt";
+        let before = pickup_sample_count(queue);
+
+        let ts = chrono::Utc::now().timestamp().to_string();
+        observe_redis_pickup_latency(1, None, &ts, queue);
+
+        assert_eq!(pickup_sample_count(queue), before + 1);
+    }
+
+    #[test]
+    fn test_observe_redis_pickup_latency_skips_retry_attempts() {
+        let queue = "test-pickup-skip-retry";
+        let before = pickup_sample_count(queue);
+
+        let ts = chrono::Utc::now().timestamp().to_string();
+        observe_redis_pickup_latency(2, None, &ts, queue);
+        observe_redis_pickup_latency(99, None, &ts, queue);
+
+        assert_eq!(pickup_sample_count(queue), before);
+    }
+
+    #[test]
+    fn test_observe_redis_pickup_latency_prefers_available_at_over_timestamp() {
+        // available_at is "now" so latency should be ~0; job_timestamp is far in the
+        // past, so if the fallback were used we'd see a large value. We verify the
+        // preference indirectly via the histogram sum delta.
+        let queue = "test-pickup-prefers-available-at";
+        let histogram = crate::metrics::QUEUE_PICKUP_LATENCY.with_label_values(&[queue, "redis"]);
+        let sum_before = histogram.get_sample_sum();
+
+        let now = chrono::Utc::now().timestamp();
+        let available_at = now.to_string();
+        let stale_timestamp = (now - 3600).to_string();
+
+        observe_redis_pickup_latency(1, Some(&available_at), &stale_timestamp, queue);
+
+        let delta = histogram.get_sample_sum() - sum_before;
+        assert!(
+            delta < 5.0,
+            "expected near-zero latency when available_at is now, got {delta}"
+        );
+    }
+
+    #[test]
+    fn test_observe_redis_pickup_latency_falls_back_to_timestamp_when_available_at_absent() {
+        let queue = "test-pickup-fallback-timestamp";
+        let before = pickup_sample_count(queue);
+
+        let ts = chrono::Utc::now().timestamp().to_string();
+        observe_redis_pickup_latency(1, None, &ts, queue);
+
+        assert_eq!(pickup_sample_count(queue), before + 1);
+    }
+
+    #[test]
+    fn test_observe_redis_pickup_latency_clamps_negative_skew_to_zero() {
+        // baseline in the future (producer clock ahead of consumer) → delta negative
+        // → clamped to 0, but the observation still records.
+        let queue = "test-pickup-clamps-negative";
+        let histogram = crate::metrics::QUEUE_PICKUP_LATENCY.with_label_values(&[queue, "redis"]);
+        let sum_before = histogram.get_sample_sum();
+        let count_before = histogram.get_sample_count();
+
+        let future_ts = (chrono::Utc::now().timestamp() + 3600).to_string();
+        observe_redis_pickup_latency(1, None, &future_ts, queue);
+
+        assert_eq!(histogram.get_sample_count(), count_before + 1);
+        let delta_sum = histogram.get_sample_sum() - sum_before;
+        assert!(
+            delta_sum.abs() < f64::EPSILON,
+            "expected 0 latency for future baseline, got {delta_sum}"
+        );
+    }
+
+    #[test]
+    fn test_observe_redis_pickup_latency_skips_when_baseline_unparsable() {
+        let queue = "test-pickup-unparsable";
+        let before = pickup_sample_count(queue);
+
+        observe_redis_pickup_latency(1, None, "not-a-number", queue);
+
+        assert_eq!(pickup_sample_count(queue), before);
     }
 }

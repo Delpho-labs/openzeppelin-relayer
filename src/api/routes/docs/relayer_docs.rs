@@ -24,7 +24,8 @@ use crate::{
         },
         ApiResponse, CreateRelayerRequest, DeletePendingTransactionsResponse, JsonRpcRequest,
         JsonRpcResponse, NetworkRpcRequest, NetworkRpcResult, NetworkTransactionRequest,
-        RelayerResponse, RelayerStatus, TransactionResponse, UpdateRelayerRequest,
+        RelayerResponse, RelayerStatus, TransactionResponse, TransactionStatus,
+        UpdateRelayerRequest,
     },
 };
 
@@ -502,6 +503,12 @@ fn doc_get_relayer_status() {}
 fn doc_get_relayer_balance() {}
 
 /// Sends a transaction through the specified relayer.
+///
+/// Accepts an optional `Idempotency-Key` header: a client-generated unique key (max 255 chars)
+/// that makes the request idempotent. Repeating a request with the same key returns the original
+/// transaction. Keys expire after IDEMPOTENCY_KEY_TTL_SECONDS (default 24h).
+// The header is described above instead of declared in `params` so generated SDK clients keep
+// their signature: callers send it through request options rather than a positional argument.
 #[utoipa::path(
     post,
     path = "/api/v1/relayers/{relayer_id}/transactions",
@@ -511,7 +518,7 @@ fn doc_get_relayer_balance() {}
         ("bearer_auth" = [])
     ),
     params(
-        ("relayer_id" = String, Path, description = "The unique identifier of the relayer")
+        ("relayer_id" = String, Path, description = "The unique identifier of the relayer"),
     ),
     request_body = NetworkTransactionRequest,
     responses(
@@ -543,6 +550,26 @@ fn doc_get_relayer_balance() {}
             example = json!({
                 "success": false,
                 "message": "Relayer with ID relayer_id not found",
+                "data": null
+            })
+        ),
+        (
+            status = 409,
+            description = "Conflict",
+            body = ApiResponse<String>,
+            example = json!({
+                "success": false,
+                "error": "A request with this Idempotency-Key is already in progress",
+                "data": null
+            })
+        ),
+        (
+            status = 422,
+            description = "Unprocessable Entity",
+            body = ApiResponse<String>,
+            example = json!({
+                "success": false,
+                "error": "Idempotency-Key reused with a different request payload",
                 "data": null
             })
         ),
@@ -723,7 +750,8 @@ fn doc_get_transaction_by_nonce() {}
     params(
         ("relayer_id" = String, Path, description = "The unique identifier of the relayer"),
         ("page" = Option<usize>, Query, description = "Page number for pagination (starts at 1)"),
-        ("per_page" = Option<usize>, Query, description = "Number of items per page (default: 10)")
+        ("per_page" = Option<usize>, Query, description = "Number of items per page (default: 10)"),
+        ("status" = Option<TransactionStatus>, Query, description = "Optional status filter, accepted case-insensitively (e.g. pending, submitted, confirmed, canceled). Cancelled-in-progress transactions are excluded from active-status results until their replacement mines.")
     ),
     responses(
         (status = 200, description = "Relayer transactions retrieved successfully", body = ApiResponse<Vec<TransactionResponse>>),

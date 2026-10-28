@@ -1,5 +1,5 @@
 use crate::constants::get_stellar_sponsored_transaction_validity_duration;
-use crate::domain::relayer::evm::create_error_response;
+use crate::domain::relayer::evm::{create_error_response, create_error_response_with_data};
 use crate::services::stellar_dex::StellarDexService;
 use crate::utils::{map_provider_error, sanitize_error_description};
 /// This module defines the `StellarRelayer` struct and its associated functionality for
@@ -25,10 +25,8 @@ use crate::utils::{map_provider_error, sanitize_error_description};
 /// To use the `StellarRelayer`, create an instance using the `new` method, providing the necessary
 /// components. Then, call the appropriate methods to process transactions and manage the relayer's state.
 use crate::{
-    constants::{
-        transactions::PENDING_TRANSACTION_STATUSES, STELLAR_SMALLEST_UNIT_NAME,
-        STELLAR_STATUS_CHECK_INITIAL_DELAY_SECONDS,
-    },
+    config::ServerConfig,
+    constants::{transactions::PENDING_TRANSACTION_STATUSES, STELLAR_SMALLEST_UNIT_NAME},
     domain::{
         create_success_response, transaction::stellar::fetch_next_sequence_from_chain,
         BalanceResponse, SignDataRequest, SignDataResponse, SignTransactionExternalResponse,
@@ -46,7 +44,7 @@ use crate::{
     },
     repositories::{NetworkRepository, RelayerRepository, Repository, TransactionRepository},
     services::{
-        provider::{StellarProvider, StellarProviderTrait},
+        provider::{ProviderError, StellarProvider, StellarProviderTrait},
         signer::{StellarSignTrait, StellarSigner},
         stellar_dex::StellarDexServiceTrait,
         TransactionCounterService, TransactionCounterServiceTrait,
@@ -234,14 +232,22 @@ where
             .await
             .map_err(RelayerError::ProviderError)?;
 
-        info!(
-            next_sequence = %next,
-            "setting next sequence"
-        );
-        self.transaction_counter_service
-            .set(next)
+        // Raise the local counter to the on-chain floor *monotonically*: a blind `set` here
+        // would rewind the counter when concurrent allocations have already advanced it past
+        // the chain value, causing duplicate/gapped sequences and a TxBadSeq cascade
+        // (the live chain sequence is a floor, never the authoritative next assignment).
+        // `sync_floor` only advances when the chain is ahead.
+        let effective = self
+            .transaction_counter_service
+            .sync_floor(next)
             .await
             .map_err(RelayerError::from)?;
+
+        info!(
+            chain_sequence = %next,
+            effective_sequence = %effective,
+            "synced local sequence counter to chain floor"
+        );
         Ok(())
     }
 
@@ -459,9 +465,10 @@ where
             network_type = ?self.relayer.network_type,
         )
     )]
-    async fn process_transaction_request(
+    async fn process_transaction_request_with_id(
         &self,
         network_transaction: NetworkTransactionRequest,
+        tx_id: String,
     ) -> Result<TransactionRepoModel, RelayerError> {
         let network_model = self
             .network_repository
@@ -473,8 +480,9 @@ where
                     self.relayer.network
                 ))
             })?;
-        let transaction =
+        let mut transaction =
             TransactionRepoModel::try_from((&network_transaction, &self.relayer, &network_model))?;
+        transaction.id = tx_id;
 
         self.transaction_repository
             .create(transaction.clone())
@@ -493,7 +501,7 @@ where
                     NetworkType::Stellar,
                 ),
                 Some(calculate_scheduled_timestamp(
-                    STELLAR_STATUS_CHECK_INITIAL_DELAY_SECONDS,
+                    ServerConfig::get_stellar_status_check_initial_delay_seconds(),
                 )),
             )
             .await
@@ -745,11 +753,19 @@ where
                 );
                 let (error_code, error_message) = map_provider_error(&provider_error);
                 let sanitized_description = sanitize_error_description(&provider_error);
-                Ok(create_error_response(
+                // Forward upstream `data` (capped in create_error_response_with_data).
+                // Message/description stay sanitized; data is intentionally not, so
+                // authenticated clients can use provider diagnostics / structured payloads.
+                let data = match &provider_error {
+                    ProviderError::RpcErrorCode { data, .. } => data.clone(),
+                    _ => None,
+                };
+                Ok(create_error_response_with_data(
                     id.clone(),
                     error_code,
                     error_message,
                     &sanitized_description,
+                    data,
                 ))
             }
         }
@@ -1008,12 +1024,12 @@ mod tests {
         },
     };
     use mockall::predicate::*;
-    use soroban_rs::xdr::{
+    use std::future::ready;
+    use std::sync::Arc;
+    use stellar_xdr::{
         AccountEntry, AccountEntryExt, AccountId, DecoratedSignature, PublicKey, SequenceNumber,
         Signature, SignatureHint, String32, Thresholds, Uint256, VecM,
     };
-    use std::future::ready;
-    use std::sync::Arc;
 
     /// Helper function to create a mock DEX service for testing
     fn create_mock_dex_service() -> Arc<MockStellarDexServiceTrait> {
@@ -1111,9 +1127,9 @@ mod tests {
             });
         let mut counter = MockTransactionCounterServiceTrait::new();
         counter
-            .expect_set()
+            .expect_sync_floor()
             .with(eq(6u64))
-            .returning(|_| Box::pin(async { Ok(()) }));
+            .returning(|floor| Box::pin(async move { Ok(floor) }));
         let relayer_repo = MockRelayerRepository::new();
         let tx_repo = MockTransactionRepository::new();
         let job_producer = MockJobProducerTrait::new();
@@ -1136,6 +1152,73 @@ mod tests {
         .await
         .unwrap();
 
+        let result = relayer.sync_sequence().await;
+        assert!(result.is_ok());
+    }
+
+    /// Verifies `sync_sequence` never rewinds the counter below sequences already
+    /// allocated by concurrent `get_and_increment` calls. On the multi-threaded runtime,
+    /// a periodic/startup health-check sync racing with in-flight transaction submissions
+    /// must only ever raise the counter to the chain floor, never blindly `set` it.
+    #[tokio::test]
+    async fn test_sync_sequence_does_not_rewind_counter() {
+        let ctx = TestCtx::default();
+        ctx.setup_network().await;
+        let relayer_model = ctx.relayer_model.clone();
+        let mut provider = MockStellarProviderTrait::new();
+        // Chain reports on-chain sequence 5, so next usable sequence is 6.
+        provider
+            .expect_get_account()
+            .with(eq(relayer_model.address.clone()))
+            .returning(|_| {
+                Box::pin(async {
+                    Ok(AccountEntry {
+                        account_id: AccountId(PublicKey::PublicKeyTypeEd25519(Uint256([0; 32]))),
+                        balance: 0,
+                        ext: AccountEntryExt::V0,
+                        flags: 0,
+                        home_domain: String32::default(),
+                        inflation_dest: None,
+                        seq_num: SequenceNumber(5),
+                        num_sub_entries: 0,
+                        signers: VecM::default(),
+                        thresholds: Thresholds([0, 0, 0, 0]),
+                    })
+                })
+            });
+
+        let mut counter = MockTransactionCounterServiceTrait::new();
+        // Counter is already at 15 (advanced past the chain floor of 6 by concurrent
+        // allocations). `sync_floor` must return the higher existing value, not rewind.
+        counter
+            .expect_sync_floor()
+            .with(eq(6u64))
+            .returning(|floor| Box::pin(async move { Ok(std::cmp::max(floor, 15)) }));
+
+        let relayer_repo = MockRelayerRepository::new();
+        let tx_repo = MockTransactionRepository::new();
+        let job_producer = MockJobProducerTrait::new();
+        let signer = Arc::new(MockStellarSignTrait::new());
+        let dex_service = create_mock_dex_service();
+
+        let relayer = StellarRelayer::new(
+            relayer_model.clone(),
+            signer,
+            provider,
+            StellarRelayerDependencies::new(
+                Arc::new(relayer_repo),
+                ctx.network_repository.clone(),
+                Arc::new(tx_repo),
+                Arc::new(counter),
+                Arc::new(job_producer),
+            ),
+            dex_service,
+        )
+        .await
+        .unwrap();
+
+        // sync_sequence succeeds and, because it goes through sync_floor rather than a
+        // blind set, does not clobber the counter's higher, already-allocated value.
         let result = relayer.sync_sequence().await;
         assert!(result.is_ok());
     }
@@ -1765,8 +1848,8 @@ mod tests {
         let tx_repo = MockTransactionRepository::new();
         let mut counter = MockTransactionCounterServiceTrait::new();
         counter
-            .expect_set()
-            .returning(|_| Box::pin(async { Ok(()) }));
+            .expect_sync_floor()
+            .returning(|floor| Box::pin(async move { Ok(floor) }));
         let signer = Arc::new(MockStellarSignTrait::new());
         let dex_service = create_mock_dex_service();
         let job_producer = MockJobProducerTrait::new();
@@ -1821,8 +1904,8 @@ mod tests {
         let tx_repo = MockTransactionRepository::new();
         let mut counter = MockTransactionCounterServiceTrait::new();
         counter
-            .expect_set()
-            .returning(|_| Box::pin(async { Ok(()) }));
+            .expect_sync_floor()
+            .returning(|floor| Box::pin(async move { Ok(floor) }));
         let signer = Arc::new(MockStellarSignTrait::new());
         let dex_service = create_mock_dex_service();
         let job_producer = MockJobProducerTrait::new();
@@ -3157,8 +3240,8 @@ mod tests {
 
             let mut counter = MockTransactionCounterServiceTrait::new();
             counter
-                .expect_set()
-                .returning(|_| Box::pin(async { Ok(()) }));
+                .expect_sync_floor()
+                .returning(|floor| Box::pin(async move { Ok(floor) }));
 
             let relayer = StellarRelayer::new(
                 relayer_model.clone(),
@@ -3268,8 +3351,8 @@ mod tests {
 
             let mut counter = MockTransactionCounterServiceTrait::new();
             counter
-                .expect_set()
-                .returning(|_| Box::pin(async { Ok(()) }));
+                .expect_sync_floor()
+                .returning(|floor| Box::pin(async move { Ok(floor) }));
 
             let relayer = StellarRelayer::new(
                 relayer_model.clone(),
@@ -3395,6 +3478,64 @@ mod tests {
             let response = result.unwrap();
             // Should return an error response for provider error
             assert!(response.error.is_some());
+        }
+
+        #[tokio::test]
+        async fn test_rpc_provider_rpc_error_preserves_data() {
+            let ctx = TestCtx::default();
+            ctx.setup_network().await;
+            let relayer_model = ctx.relayer_model.clone();
+            let error_data = serde_json::json!({
+                "status": "FAILED",
+                "errorResultXdr": "AAAAAA=="
+            });
+
+            let mut provider = MockStellarProviderTrait::new();
+            provider.expect_raw_request_dyn().returning({
+                let error_data = error_data.clone();
+                move |_, _, _| {
+                    let error_data = error_data.clone();
+                    Box::pin(async move {
+                        Err(ProviderError::RpcErrorCode {
+                            code: -32000,
+                            message: "transaction submission failed".to_string(),
+                            data: Some(error_data),
+                        })
+                    })
+                }
+            });
+
+            let signer = Arc::new(MockStellarSignTrait::new());
+            let dex_service = create_mock_dex_service();
+
+            let relayer = StellarRelayer::new(
+                relayer_model.clone(),
+                signer,
+                provider,
+                StellarRelayerDependencies::new(
+                    Arc::new(MockRelayerRepository::new()),
+                    ctx.network_repository.clone(),
+                    Arc::new(MockTransactionRepository::new()),
+                    Arc::new(MockTransactionCounterServiceTrait::new()),
+                    Arc::new(MockJobProducerTrait::new()),
+                ),
+                dex_service,
+            )
+            .await
+            .unwrap();
+
+            let request = JsonRpcRequest {
+                jsonrpc: "2.0".to_string(),
+                id: Some(JsonRpcId::Number(42)),
+                params: NetworkRpcRequest::Stellar(StellarRpcRequest::RawRpcRequest {
+                    method: "sendTransaction".to_string(),
+                    params: serde_json::Value::Null,
+                }),
+            };
+
+            let response = relayer.rpc(request).await.unwrap();
+            let error = response.error.expect("expected RPC error");
+            assert_eq!(error.data, Some(error_data));
         }
 
         #[tokio::test]

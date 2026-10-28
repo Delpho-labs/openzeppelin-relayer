@@ -40,7 +40,7 @@ impl InMemoryNetworkRepository {
         }
     }
 
-    async fn acquire_lock<T>(lock: &Mutex<T>) -> Result<MutexGuard<T>, RepositoryError> {
+    async fn acquire_lock<T>(lock: &Mutex<T>) -> Result<MutexGuard<'_, T>, RepositoryError> {
         Ok(lock.lock().await)
     }
 
@@ -218,6 +218,7 @@ mod tests {
                     common,
                     chain_id: Some(1),
                     required_confirmations: Some(1),
+                    status_check: None,
                     features: None,
                     symbol: Some("ETH".to_string()),
                     gas_price_cache: None,
