@@ -24,7 +24,32 @@
       "policies": {
         "min_balance": 50000000000000000,
         "eip1559_pricing": true,
-        "gas_limit_estimation": true
+        "gas_limit_estimation": true,
+        "gas_price_cap": 1000000000000,
+        "whitelist_receivers": [
+          "0xfe1489d1b3972ba3670c6e043f82064df40c0e8d",
+          "0xa7a101635c3aaf7ae2b7cbe76b5cb8ef617b9171",
+          "0xf9923b530705dbc3e7f972decfa2bf1d1e2228c9",
+          "0xb96e0577da6edcccf1eeb2598690edd351b026be",
+          "0xd14b4e223af6a70ed2381504db3c644651351d2b",
+          "0x6ad26ea057abea0aa4d727fd5dd0e6785011c7cb",
+          "0x83ebe6f3a34b1489a5122f20786958626b5ec3a0",
+          "0x474ab2064dfbdcd9c124a180ae5aef55af566cce",
+          "0xb2efa4fe3c30ca369f6d0444eb1a277c070b7f80",
+          "0x44108c002a3d47c810266ed8676d9095500d3de5",
+          "0x979bb3fb85a8b7cb3d7ca4e06073567ad807635d",
+          "0xa276b55b6a54d432a2684bd57e5c4caaaafac843",
+          "0xf0a13ac5a4dba55dd80a5e0e79adae05f479222f",
+          "0xccdfa8f669f2fe1eeff009e75fbbab442c67437b",
+          "0xbe8d95b012eb561e10e857e4a9895479060f21c3",
+          "0x8bc48555c2fabed1140702119fc3bb49597797c7",
+          "0x2f98d1a3bc7eb82be986469b23db8b81e67745af",
+          "0x004d7ac4edfde8a22aa49e0a0084a9891cb6df9b",
+          "0x117e4baf69ffb438611f6f23690fd6ef228ca210",
+          "0x0916ebf21eee50d30a0bc03ac7ffee07f8933272",
+          "0x75198fc9bcfd610c60bd2e74afe0d37e4035b46c",
+          "0x2222222222222222222222222222222222222222"
+        ]
       }
     },
     {
@@ -51,7 +76,32 @@
       "policies": {
         "min_balance": 50000000000000000,
         "eip1559_pricing": true,
-        "gas_limit_estimation": true
+        "gas_limit_estimation": true,
+        "gas_price_cap": 1000000000000,
+        "whitelist_receivers": [
+          "0xfe1489d1b3972ba3670c6e043f82064df40c0e8d",
+          "0xa7a101635c3aaf7ae2b7cbe76b5cb8ef617b9171",
+          "0xf9923b530705dbc3e7f972decfa2bf1d1e2228c9",
+          "0xb96e0577da6edcccf1eeb2598690edd351b026be",
+          "0xd14b4e223af6a70ed2381504db3c644651351d2b",
+          "0x6ad26ea057abea0aa4d727fd5dd0e6785011c7cb",
+          "0x83ebe6f3a34b1489a5122f20786958626b5ec3a0",
+          "0x474ab2064dfbdcd9c124a180ae5aef55af566cce",
+          "0xb2efa4fe3c30ca369f6d0444eb1a277c070b7f80",
+          "0x44108c002a3d47c810266ed8676d9095500d3de5",
+          "0x979bb3fb85a8b7cb3d7ca4e06073567ad807635d",
+          "0xa276b55b6a54d432a2684bd57e5c4caaaafac843",
+          "0xf0a13ac5a4dba55dd80a5e0e79adae05f479222f",
+          "0xccdfa8f669f2fe1eeff009e75fbbab442c67437b",
+          "0xbe8d95b012eb561e10e857e4a9895479060f21c3",
+          "0x8bc48555c2fabed1140702119fc3bb49597797c7",
+          "0x2f98d1a3bc7eb82be986469b23db8b81e67745af",
+          "0x004d7ac4edfde8a22aa49e0a0084a9891cb6df9b",
+          "0x117e4baf69ffb438611f6f23690fd6ef228ca210",
+          "0x0916ebf21eee50d30a0bc03ac7ffee07f8933272",
+          "0x75198fc9bcfd610c60bd2e74afe0d37e4035b46c",
+          "0x2222222222222222222222222222222222222222"
+        ]
       }
     },
     {
@@ -78,7 +128,32 @@
       "policies": {
         "min_balance": 50000000000000000,
         "eip1559_pricing": true,
-        "gas_limit_estimation": true
+        "gas_limit_estimation": true,
+        "gas_price_cap": 1000000000000,
+        "whitelist_receivers": [
+          "0xfe1489d1b3972ba3670c6e043f82064df40c0e8d",
+          "0xa7a101635c3aaf7ae2b7cbe76b5cb8ef617b9171",
+          "0xf9923b530705dbc3e7f972decfa2bf1d1e2228c9",
+          "0xb96e0577da6edcccf1eeb2598690edd351b026be",
+          "0xd14b4e223af6a70ed2381504db3c644651351d2b",
+          "0x6ad26ea057abea0aa4d727fd5dd0e6785011c7cb",
+          "0x83ebe6f3a34b1489a5122f20786958626b5ec3a0",
+          "0x474ab2064dfbdcd9c124a180ae5aef55af566cce",
+          "0xb2efa4fe3c30ca369f6d0444eb1a277c070b7f80",
+          "0x44108c002a3d47c810266ed8676d9095500d3de5",
+          "0x979bb3fb85a8b7cb3d7ca4e06073567ad807635d",
+          "0xa276b55b6a54d432a2684bd57e5c4caaaafac843",
+          "0xf0a13ac5a4dba55dd80a5e0e79adae05f479222f",
+          "0xccdfa8f669f2fe1eeff009e75fbbab442c67437b",
+          "0xbe8d95b012eb561e10e857e4a9895479060f21c3",
+          "0x8bc48555c2fabed1140702119fc3bb49597797c7",
+          "0x2f98d1a3bc7eb82be986469b23db8b81e67745af",
+          "0x004d7ac4edfde8a22aa49e0a0084a9891cb6df9b",
+          "0x117e4baf69ffb438611f6f23690fd6ef228ca210",
+          "0x0916ebf21eee50d30a0bc03ac7ffee07f8933272",
+          "0x75198fc9bcfd610c60bd2e74afe0d37e4035b46c",
+          "0x2222222222222222222222222222222222222222"
+        ]
       }
     },
     {
@@ -105,7 +180,30 @@
       "policies": {
         "min_balance": 50000000000000000,
         "eip1559_pricing": true,
-        "gas_limit_estimation": true
+        "gas_limit_estimation": true,
+        "gas_price_cap": 1000000000000,
+        "whitelist_receivers": [
+          "0x572d924566715d726a70a510bb8b889e69c1b9cc",
+          "0x89656cfa2bdfa60637e109592c47176f93afdbd5",
+          "0xfe1489d1b3972ba3670c6e043f82064df40c0e8d",
+          "0xa7a101635c3aaf7ae2b7cbe76b5cb8ef617b9171",
+          "0xf9923b530705dbc3e7f972decfa2bf1d1e2228c9",
+          "0xb96e0577da6edcccf1eeb2598690edd351b026be",
+          "0xd14b4e223af6a70ed2381504db3c644651351d2b",
+          "0x6ad26ea057abea0aa4d727fd5dd0e6785011c7cb",
+          "0x83ebe6f3a34b1489a5122f20786958626b5ec3a0",
+          "0x474ab2064dfbdcd9c124a180ae5aef55af566cce",
+          "0xb2efa4fe3c30ca369f6d0444eb1a277c070b7f80",
+          "0x44108c002a3d47c810266ed8676d9095500d3de5",
+          "0x979bb3fb85a8b7cb3d7ca4e06073567ad807635d",
+          "0xa276b55b6a54d432a2684bd57e5c4caaaafac843",
+          "0xf0a13ac5a4dba55dd80a5e0e79adae05f479222f",
+          "0xccdfa8f669f2fe1eeff009e75fbbab442c67437b",
+          "0xbe8d95b012eb561e10e857e4a9895479060f21c3",
+          "0x8bc48555c2fabed1140702119fc3bb49597797c7",
+          "0x2f98d1a3bc7eb82be986469b23db8b81e67745af",
+          "0x004d7ac4edfde8a22aa49e0a0084a9891cb6df9b"
+        ]
       }
     },
     {
@@ -132,7 +230,30 @@
       "policies": {
         "min_balance": 50000000000000000,
         "eip1559_pricing": true,
-        "gas_limit_estimation": true
+        "gas_limit_estimation": true,
+        "gas_price_cap": 1000000000000,
+        "whitelist_receivers": [
+          "0x572d924566715d726a70a510bb8b889e69c1b9cc",
+          "0x89656cfa2bdfa60637e109592c47176f93afdbd5",
+          "0xfe1489d1b3972ba3670c6e043f82064df40c0e8d",
+          "0xa7a101635c3aaf7ae2b7cbe76b5cb8ef617b9171",
+          "0xf9923b530705dbc3e7f972decfa2bf1d1e2228c9",
+          "0xb96e0577da6edcccf1eeb2598690edd351b026be",
+          "0xd14b4e223af6a70ed2381504db3c644651351d2b",
+          "0x6ad26ea057abea0aa4d727fd5dd0e6785011c7cb",
+          "0x83ebe6f3a34b1489a5122f20786958626b5ec3a0",
+          "0x474ab2064dfbdcd9c124a180ae5aef55af566cce",
+          "0xb2efa4fe3c30ca369f6d0444eb1a277c070b7f80",
+          "0x44108c002a3d47c810266ed8676d9095500d3de5",
+          "0x979bb3fb85a8b7cb3d7ca4e06073567ad807635d",
+          "0xa276b55b6a54d432a2684bd57e5c4caaaafac843",
+          "0xf0a13ac5a4dba55dd80a5e0e79adae05f479222f",
+          "0xccdfa8f669f2fe1eeff009e75fbbab442c67437b",
+          "0xbe8d95b012eb561e10e857e4a9895479060f21c3",
+          "0x8bc48555c2fabed1140702119fc3bb49597797c7",
+          "0x2f98d1a3bc7eb82be986469b23db8b81e67745af",
+          "0x004d7ac4edfde8a22aa49e0a0084a9891cb6df9b"
+        ]
       }
     },
     {
@@ -159,7 +280,30 @@
       "policies": {
         "min_balance": 50000000000000000,
         "eip1559_pricing": true,
-        "gas_limit_estimation": true
+        "gas_limit_estimation": true,
+        "gas_price_cap": 1000000000000,
+        "whitelist_receivers": [
+          "0x572d924566715d726a70a510bb8b889e69c1b9cc",
+          "0x89656cfa2bdfa60637e109592c47176f93afdbd5",
+          "0xfe1489d1b3972ba3670c6e043f82064df40c0e8d",
+          "0xa7a101635c3aaf7ae2b7cbe76b5cb8ef617b9171",
+          "0xf9923b530705dbc3e7f972decfa2bf1d1e2228c9",
+          "0xb96e0577da6edcccf1eeb2598690edd351b026be",
+          "0xd14b4e223af6a70ed2381504db3c644651351d2b",
+          "0x6ad26ea057abea0aa4d727fd5dd0e6785011c7cb",
+          "0x83ebe6f3a34b1489a5122f20786958626b5ec3a0",
+          "0x474ab2064dfbdcd9c124a180ae5aef55af566cce",
+          "0xb2efa4fe3c30ca369f6d0444eb1a277c070b7f80",
+          "0x44108c002a3d47c810266ed8676d9095500d3de5",
+          "0x979bb3fb85a8b7cb3d7ca4e06073567ad807635d",
+          "0xa276b55b6a54d432a2684bd57e5c4caaaafac843",
+          "0xf0a13ac5a4dba55dd80a5e0e79adae05f479222f",
+          "0xccdfa8f669f2fe1eeff009e75fbbab442c67437b",
+          "0xbe8d95b012eb561e10e857e4a9895479060f21c3",
+          "0x8bc48555c2fabed1140702119fc3bb49597797c7",
+          "0x2f98d1a3bc7eb82be986469b23db8b81e67745af",
+          "0x004d7ac4edfde8a22aa49e0a0084a9891cb6df9b"
+        ]
       }
     },
     {
@@ -186,7 +330,31 @@
       "policies": {
         "min_balance": 50000000000000000,
         "eip1559_pricing": true,
-        "gas_limit_estimation": true
+        "gas_limit_estimation": true,
+        "gas_price_cap": 1000000000000,
+        "whitelist_receivers": [
+          "0xfe1489d1b3972ba3670c6e043f82064df40c0e8d",
+          "0xa7a101635c3aaf7ae2b7cbe76b5cb8ef617b9171",
+          "0xf9923b530705dbc3e7f972decfa2bf1d1e2228c9",
+          "0xb96e0577da6edcccf1eeb2598690edd351b026be",
+          "0xd14b4e223af6a70ed2381504db3c644651351d2b",
+          "0x6ad26ea057abea0aa4d727fd5dd0e6785011c7cb",
+          "0x83ebe6f3a34b1489a5122f20786958626b5ec3a0",
+          "0x474ab2064dfbdcd9c124a180ae5aef55af566cce",
+          "0xb2efa4fe3c30ca369f6d0444eb1a277c070b7f80",
+          "0x44108c002a3d47c810266ed8676d9095500d3de5",
+          "0x979bb3fb85a8b7cb3d7ca4e06073567ad807635d",
+          "0xa276b55b6a54d432a2684bd57e5c4caaaafac843",
+          "0xf0a13ac5a4dba55dd80a5e0e79adae05f479222f",
+          "0xccdfa8f669f2fe1eeff009e75fbbab442c67437b",
+          "0xbe8d95b012eb561e10e857e4a9895479060f21c3",
+          "0x8bc48555c2fabed1140702119fc3bb49597797c7",
+          "0x2f98d1a3bc7eb82be986469b23db8b81e67745af",
+          "0x004d7ac4edfde8a22aa49e0a0084a9891cb6df9b",
+          "0x0916ebf21eee50d30a0bc03ac7ffee07f8933272",
+          "0x75198fc9bcfd610c60bd2e74afe0d37e4035b46c",
+          "0x6c14eb0e53d6ba1b0a1aca86aa0d1e40e7e3a1af"
+        ]
       }
     },
     {
@@ -213,7 +381,31 @@
       "policies": {
         "min_balance": 50000000000000000,
         "eip1559_pricing": true,
-        "gas_limit_estimation": true
+        "gas_limit_estimation": true,
+        "gas_price_cap": 1000000000000,
+        "whitelist_receivers": [
+          "0xfe1489d1b3972ba3670c6e043f82064df40c0e8d",
+          "0xa7a101635c3aaf7ae2b7cbe76b5cb8ef617b9171",
+          "0xf9923b530705dbc3e7f972decfa2bf1d1e2228c9",
+          "0xb96e0577da6edcccf1eeb2598690edd351b026be",
+          "0xd14b4e223af6a70ed2381504db3c644651351d2b",
+          "0x6ad26ea057abea0aa4d727fd5dd0e6785011c7cb",
+          "0x83ebe6f3a34b1489a5122f20786958626b5ec3a0",
+          "0x474ab2064dfbdcd9c124a180ae5aef55af566cce",
+          "0xb2efa4fe3c30ca369f6d0444eb1a277c070b7f80",
+          "0x44108c002a3d47c810266ed8676d9095500d3de5",
+          "0x979bb3fb85a8b7cb3d7ca4e06073567ad807635d",
+          "0xa276b55b6a54d432a2684bd57e5c4caaaafac843",
+          "0xf0a13ac5a4dba55dd80a5e0e79adae05f479222f",
+          "0xccdfa8f669f2fe1eeff009e75fbbab442c67437b",
+          "0xbe8d95b012eb561e10e857e4a9895479060f21c3",
+          "0x8bc48555c2fabed1140702119fc3bb49597797c7",
+          "0x2f98d1a3bc7eb82be986469b23db8b81e67745af",
+          "0x004d7ac4edfde8a22aa49e0a0084a9891cb6df9b",
+          "0x0916ebf21eee50d30a0bc03ac7ffee07f8933272",
+          "0x75198fc9bcfd610c60bd2e74afe0d37e4035b46c",
+          "0x6c14eb0e53d6ba1b0a1aca86aa0d1e40e7e3a1af"
+        ]
       }
     },
     {
@@ -240,7 +432,31 @@
       "policies": {
         "min_balance": 50000000000000000,
         "eip1559_pricing": true,
-        "gas_limit_estimation": true
+        "gas_limit_estimation": true,
+        "gas_price_cap": 1000000000000,
+        "whitelist_receivers": [
+          "0xfe1489d1b3972ba3670c6e043f82064df40c0e8d",
+          "0xa7a101635c3aaf7ae2b7cbe76b5cb8ef617b9171",
+          "0xf9923b530705dbc3e7f972decfa2bf1d1e2228c9",
+          "0xb96e0577da6edcccf1eeb2598690edd351b026be",
+          "0xd14b4e223af6a70ed2381504db3c644651351d2b",
+          "0x6ad26ea057abea0aa4d727fd5dd0e6785011c7cb",
+          "0x83ebe6f3a34b1489a5122f20786958626b5ec3a0",
+          "0x474ab2064dfbdcd9c124a180ae5aef55af566cce",
+          "0xb2efa4fe3c30ca369f6d0444eb1a277c070b7f80",
+          "0x44108c002a3d47c810266ed8676d9095500d3de5",
+          "0x979bb3fb85a8b7cb3d7ca4e06073567ad807635d",
+          "0xa276b55b6a54d432a2684bd57e5c4caaaafac843",
+          "0xf0a13ac5a4dba55dd80a5e0e79adae05f479222f",
+          "0xccdfa8f669f2fe1eeff009e75fbbab442c67437b",
+          "0xbe8d95b012eb561e10e857e4a9895479060f21c3",
+          "0x8bc48555c2fabed1140702119fc3bb49597797c7",
+          "0x2f98d1a3bc7eb82be986469b23db8b81e67745af",
+          "0x004d7ac4edfde8a22aa49e0a0084a9891cb6df9b",
+          "0x0916ebf21eee50d30a0bc03ac7ffee07f8933272",
+          "0x75198fc9bcfd610c60bd2e74afe0d37e4035b46c",
+          "0x6c14eb0e53d6ba1b0a1aca86aa0d1e40e7e3a1af"
+        ]
       }
     },
     {
@@ -267,7 +483,12 @@
       "policies": {
         "min_balance": 50000000000000000,
         "eip1559_pricing": true,
-        "gas_limit_estimation": true
+        "gas_limit_estimation": true,
+        "gas_price_cap": 1000000000000,
+        "whitelist_receivers": [
+          "0xcab521444968cd7f326c7340999cb244b687894c",
+          "0x5608458e3dbd0875b02150e4a5e09e2bd7854646"
+        ]
       }
     },
     {
@@ -294,7 +515,12 @@
       "policies": {
         "min_balance": 50000000000000000,
         "eip1559_pricing": true,
-        "gas_limit_estimation": true
+        "gas_limit_estimation": true,
+        "gas_price_cap": 1000000000000,
+        "whitelist_receivers": [
+          "0xcab521444968cd7f326c7340999cb244b687894c",
+          "0x5608458e3dbd0875b02150e4a5e09e2bd7854646"
+        ]
       }
     },
     {
@@ -321,7 +547,12 @@
       "policies": {
         "min_balance": 50000000000000000,
         "eip1559_pricing": true,
-        "gas_limit_estimation": true
+        "gas_limit_estimation": true,
+        "gas_price_cap": 1000000000000,
+        "whitelist_receivers": [
+          "0xcab521444968cd7f326c7340999cb244b687894c",
+          "0x5608458e3dbd0875b02150e4a5e09e2bd7854646"
+        ]
       }
     },
     {
@@ -348,7 +579,11 @@
       "policies": {
         "min_balance": 50000000000000000,
         "eip1559_pricing": true,
-        "gas_limit_estimation": true
+        "gas_limit_estimation": true,
+        "gas_price_cap": 1000000000000,
+        "whitelist_receivers": [
+          "0xe5a837c0277f4f31cd99b141c6816d943dee01eb"
+        ]
       }
     },
     {
@@ -375,7 +610,11 @@
       "policies": {
         "min_balance": 50000000000000000,
         "eip1559_pricing": true,
-        "gas_limit_estimation": true
+        "gas_limit_estimation": true,
+        "gas_price_cap": 1000000000000,
+        "whitelist_receivers": [
+          "0xe5a837c0277f4f31cd99b141c6816d943dee01eb"
+        ]
       }
     },
     {
@@ -402,7 +641,11 @@
       "policies": {
         "min_balance": 50000000000000000,
         "eip1559_pricing": true,
-        "gas_limit_estimation": true
+        "gas_limit_estimation": true,
+        "gas_price_cap": 1000000000000,
+        "whitelist_receivers": [
+          "0xe5a837c0277f4f31cd99b141c6816d943dee01eb"
+        ]
       }
     },
     {
@@ -429,7 +672,18 @@
       "policies": {
         "min_balance": 50000000000000000,
         "eip1559_pricing": true,
-        "gas_limit_estimation": true
+        "gas_limit_estimation": true,
+        "gas_price_cap": 1000000000000,
+        "whitelist_receivers": [
+          "0x572d924566715d726a70a510bb8b889e69c1b9cc",
+          "0xb88339cb7199b77e23db6e890353e22632ba630f",
+          "0xb8ce59fc3717ada4c02eadf9682a9e934f625ebb",
+          "0x5555555555555555555555555555555555555555",
+          "0xfd739d4e423301ce9385c1fb8850539d657c296d",
+          "0xd4a48d5840ff0a80ed555d3fdc3c72cfaa5489b3",
+          "0x1ebdfc75ffe3ba3de61e7138a3e8706ac841af9b",
+          "0x744489ee3d540777a66f2cf297479745e0852f7a"
+        ]
       }
     }
   ],
