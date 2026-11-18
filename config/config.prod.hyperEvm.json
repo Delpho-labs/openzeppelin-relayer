@@ -678,7 +678,13 @@
         "gas_price_cap": 1000000000000,
         "whitelist_receivers": [
           "0x41346cfc861ac683c6f575ff041a9a5aa36b4b9b",
-          "0xf296cc9c08a92e86b1c3a04b10ccf711d996ea50"
+          "0xf296cc9c08a92e86b1c3a04b10ccf711d996ea50",
+          "0xe8ec5ae94e8efa68914000b528eb7b7a6470384d",
+          "0x8c6eb3c8d1fddc752684274fb4a3eb98dbe9cd26",
+          "0x5555555555555555555555555555555555555555",
+          "0xfd739d4e423301ce9385c1fb8850539d657c296d",
+          "0xb88339cb7199b77e23db6e890353e22632ba630f",
+          "0xb8ce59fc3717ada4c02eadf9682a9e934f625ebb"
         ]
       }
     },
@@ -710,7 +716,13 @@
         "gas_price_cap": 1000000000000,
         "whitelist_receivers": [
           "0x41346cfc861ac683c6f575ff041a9a5aa36b4b9b",
-          "0xf296cc9c08a92e86b1c3a04b10ccf711d996ea50"
+          "0xf296cc9c08a92e86b1c3a04b10ccf711d996ea50",
+          "0xe8ec5ae94e8efa68914000b528eb7b7a6470384d",
+          "0x8c6eb3c8d1fddc752684274fb4a3eb98dbe9cd26",
+          "0x5555555555555555555555555555555555555555",
+          "0xfd739d4e423301ce9385c1fb8850539d657c296d",
+          "0xb88339cb7199b77e23db6e890353e22632ba630f",
+          "0xb8ce59fc3717ada4c02eadf9682a9e934f625ebb"
         ]
       }
     },
@@ -742,7 +754,13 @@
         "gas_price_cap": 1000000000000,
         "whitelist_receivers": [
           "0x41346cfc861ac683c6f575ff041a9a5aa36b4b9b",
-          "0xf296cc9c08a92e86b1c3a04b10ccf711d996ea50"
+          "0xf296cc9c08a92e86b1c3a04b10ccf711d996ea50",
+          "0xe8ec5ae94e8efa68914000b528eb7b7a6470384d",
+          "0x8c6eb3c8d1fddc752684274fb4a3eb98dbe9cd26",
+          "0x5555555555555555555555555555555555555555",
+          "0xfd739d4e423301ce9385c1fb8850539d657c296d",
+          "0xb88339cb7199b77e23db6e890353e22632ba630f",
+          "0xb8ce59fc3717ada4c02eadf9682a9e934f625ebb"
         ]
       }
     },
@@ -774,7 +792,13 @@
         "gas_price_cap": 1000000000000,
         "whitelist_receivers": [
           "0x41346cfc861ac683c6f575ff041a9a5aa36b4b9b",
-          "0xf296cc9c08a92e86b1c3a04b10ccf711d996ea50"
+          "0xf296cc9c08a92e86b1c3a04b10ccf711d996ea50",
+          "0xe8ec5ae94e8efa68914000b528eb7b7a6470384d",
+          "0x8c6eb3c8d1fddc752684274fb4a3eb98dbe9cd26",
+          "0x5555555555555555555555555555555555555555",
+          "0xfd739d4e423301ce9385c1fb8850539d657c296d",
+          "0xb88339cb7199b77e23db6e890353e22632ba630f",
+          "0xb8ce59fc3717ada4c02eadf9682a9e934f625ebb"
         ]
       }
     },
@@ -806,7 +830,13 @@
         "gas_price_cap": 1000000000000,
         "whitelist_receivers": [
           "0x41346cfc861ac683c6f575ff041a9a5aa36b4b9b",
-          "0xf296cc9c08a92e86b1c3a04b10ccf711d996ea50"
+          "0xf296cc9c08a92e86b1c3a04b10ccf711d996ea50",
+          "0xe8ec5ae94e8efa68914000b528eb7b7a6470384d",
+          "0x8c6eb3c8d1fddc752684274fb4a3eb98dbe9cd26",
+          "0x5555555555555555555555555555555555555555",
+          "0xfd739d4e423301ce9385c1fb8850539d657c296d",
+          "0xb88339cb7199b77e23db6e890353e22632ba630f",
+          "0xb8ce59fc3717ada4c02eadf9682a9e934f625ebb"
         ]
       }
     },
@@ -998,7 +1028,6 @@
           "0x5555555555555555555555555555555555555555",
           "0xfd739d4e423301ce9385c1fb8850539d657c296d",
           "0x8c6eb3c8d1fddc752684274fb4a3eb98dbe9cd26",
-          "0xaa26b8e5cadd04430c32787ecc3aa325e99681e9",
           "0xe34c1b5af3d2d969579a6fdb98849a9537534514",
           "0x744489ee3d540777a66f2cf297479745e0852f7a"
         ]
