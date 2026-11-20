@@ -2,6 +2,8 @@ name: Openzeppelin Relayer CI/CD Pipeline
 on:
   push:
     branches: [dev, prod]
+  # Redeploy the current branch by hand, e.g. after a push that started no run.
+  workflow_dispatch:
 
 
 # Global environment variables
@@ -39,6 +41,9 @@ jobs:
 
             elif [ "${{ github.ref }}" = "refs/heads/prod" ]; then
                 echo "ENV_NAME_TAG=production" >> $GITHUB_OUTPUT
+            else
+                echo "Unsupported branch: ${{ github.ref }}"
+                exit 1
             fi
   
 
