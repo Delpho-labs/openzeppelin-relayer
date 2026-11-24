@@ -5,7 +5,6 @@ on:
   # Redeploy the current branch by hand, e.g. after a push that started no run.
   workflow_dispatch:
 
-
 # Global environment variables
 env:
   ECR_REPOSITORY_APP: openzeppelin-relayer
@@ -18,34 +17,36 @@ env:
   SECRET_NAME: openzeppeline-relayer
 
 permissions:
-    id-token: write
-    contents: read
+  contents: read
 
 jobs:
   env-setup:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
-        image_tag: ${{ steps.set-tag.outputs.TAG }}
-        target_env: ${{ steps.env_check.outputs.ENV_NAME_TAG }}
+      image_tag: ${{ steps.set-tag.outputs.TAG }}
+      target_env: ${{ steps.env_check.outputs.ENV_NAME_TAG }}
     steps:
       - name: Checkout code
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 #v6
+        with:
+          persist-credentials: false
 
       - name: Check push branch and set environment variables
         id: env_check
         run: |
-            echo "Running on branch ${{ github.ref }}"
+          echo "Running on branch ${{ github.ref }}"
 
-            if   [ "${{ github.ref }}" = "refs/heads/dev" ]; then
-                echo "ENV_NAME_TAG=development" >> $GITHUB_OUTPUT
+          if   [ "${{ github.ref }}" = "refs/heads/dev" ]; then
+              echo "ENV_NAME_TAG=development" >> $GITHUB_OUTPUT
 
-            elif [ "${{ github.ref }}" = "refs/heads/prod" ]; then
-                echo "ENV_NAME_TAG=production" >> $GITHUB_OUTPUT
-            else
-                echo "Unsupported branch: ${{ github.ref }}"
-                exit 1
-            fi
-  
+          elif [ "${{ github.ref }}" = "refs/heads/prod" ]; then
+              echo "ENV_NAME_TAG=production" >> $GITHUB_OUTPUT
+          else
+              echo "Unsupported branch: ${{ github.ref }}"
+              exit 1
+          fi
 
       - name: Set unique Docker image tag
         id: set-tag
@@ -54,61 +55,67 @@ jobs:
   build-and-upload-image:
     needs: env-setup
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     environment: ${{ needs.env-setup.outputs.target_env }}
     steps:
       - name: Checkout code
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 #v6
+        with:
+          persist-credentials: false
 
       - name: Build Docker Image
         run: |
-            docker build --build-arg  CARGO_FEATURES=redis-tls-native -f ${{ env.APP_DIR }}/Dockerfile.production -t openzeppeline-relayer-local:${{ github.sha }} ${{ env.APP_DIR }}
-            docker save openzeppeline-relayer-local:${{ github.sha }} > openzeppeline-relayer-image.tar
+          docker build --build-arg  CARGO_FEATURES=redis-tls-native -f ${{ env.APP_DIR }}/Dockerfile.production -t openzeppeline-relayer-local:${{ github.sha }} ${{ env.APP_DIR }}
+          docker save openzeppeline-relayer-local:${{ github.sha }} > openzeppeline-relayer-image.tar
 
       - name: Upload Image Artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 #v4
         with:
-            name: openzeppeline-relayer-image
-            path: openzeppeline-relayer-image.tar
+          name: openzeppeline-relayer-image
+          path: openzeppeline-relayer-image.tar
 
-      - name: Configure AWS credentials
+      - name: Configure AWS credentials (ECR Push Role)
         uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a #v4
         with:
-            role-to-assume: ${{ secrets.ROLE_TO_ASSUME }}
-            aws-region: ${{ secrets.AWS_REGION }}
+          role-to-assume: ${{ secrets.ECR_PUSH_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Login to Amazon ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@d539f0932e70871a027e9d5a9d8fc38589180a64  #v2
+        uses: aws-actions/amazon-ecr-login@d539f0932e70871a027e9d5a9d8fc38589180a64 #v2
 
       - name: Tag and Push to ECR
         env:
-            REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-            TAG: ${{ needs.env-setup.outputs.image_tag }}
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          TAG: ${{ needs.env-setup.outputs.image_tag }}
         run: |
-            docker tag openzeppeline-relayer-local:${{ github.sha }} $REGISTRY/${{ env.ECR_REPOSITORY_APP }}:$TAG
-            docker tag openzeppeline-relayer-local:${{ github.sha }} $REGISTRY/${{ env.ECR_REPOSITORY_APP }}:latest
-            docker push $REGISTRY/${{ env.ECR_REPOSITORY_APP }}:$TAG
-            docker push $REGISTRY/${{ env.ECR_REPOSITORY_APP }}:latest
+          docker tag openzeppeline-relayer-local:${{ github.sha }} $REGISTRY/${{ env.ECR_REPOSITORY_APP }}:$TAG
+          docker tag openzeppeline-relayer-local:${{ github.sha }} $REGISTRY/${{ env.ECR_REPOSITORY_APP }}:latest
+          docker push $REGISTRY/${{ env.ECR_REPOSITORY_APP }}:$TAG
+          docker push $REGISTRY/${{ env.ECR_REPOSITORY_APP }}:latest
 
-  deploy-to-ecs:
-    needs: [env-setup, build-and-upload-image]
+  update-config:
+    needs: env-setup
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     environment: ${{ needs.env-setup.outputs.target_env }}
     steps:
-
       - name: Checkout code
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 #v6
-      - name: Configure AWS credentials
+        with:
+          persist-credentials: false
+
+      - name: Configure AWS credentials (EFS Lambda Role)
         uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a #v4
         with:
-            role-to-assume: ${{ secrets.ROLE_TO_ASSUME }}
-            aws-region: ${{ secrets.AWS_REGION }}
+          role-to-assume: ${{ secrets.RELAYER_CONFIG_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@d539f0932e70871a027e9d5a9d8fc38589180a64  #v2
-
-      - name: Generate config file
+      - name: Generate and validate config file
         id: generate-config
         env:
           SECRET_NAME: ${{ env.SECRET_NAME }}
@@ -123,8 +130,11 @@ jobs:
           echo "Substituting mainnet RPC URLs..."
           sed -i "s|HYPER_EVM_RPC_URL_1|$HYPER_EVM_RPC_URL_1|g" ${APP_DIR}/config/config.json
           sed -i "s|HYPER_EVM_RPC_URL_2|$HYPER_EVM_RPC_URL_2|g" ${APP_DIR}/config/config.json
-          echo "PAYLOAD=$(jq -c . ${APP_DIR}/config/config.json)" >> $GITHUB_OUTPUT
 
+          # Validate config is valid JSON
+          jq . ${APP_DIR}/config/config.json > /dev/null || (echo "ERROR: Invalid JSON in config.json" && exit 1)
+
+          echo "PAYLOAD=$(jq -c . ${APP_DIR}/config/config.json)" >> $GITHUB_OUTPUT
 
       - name: Upload to EFS via Lambda
         run: |
@@ -159,10 +169,8 @@ jobs:
 
               echo "📤 Uploading $filepath"
 
-              # Read file content safely
               content=$(cat "$file")
 
-              # Wrap into a JSON payload
               PAYLOAD=$(jq -n \
                 --arg filename "$filepath" \
                 --argjson payload "$content" \
@@ -189,42 +197,66 @@ jobs:
             echo "⚠️ No files found in $NETWORKS_DIR, skipping upload."
           fi
 
+  deploy-to-ecs:
+    needs: [env-setup, build-and-upload-image, update-config]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    environment: ${{ needs.env-setup.outputs.target_env }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 #v6
+        with:
+          persist-credentials: false
+
+      - name: Configure AWS credentials (ECS Deploy Role)
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a #v4
+        with:
+          role-to-assume: ${{ secrets.ECS_DEPLOY_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@d539f0932e70871a027e9d5a9d8fc38589180a64 #v2
+
       - name: Download task definition
         run: |
-            aws ecs describe-task-definition \
-            --task-definition ${{ env.ECS_TASK_DEFINITION_FAMILY }} \
-            --query taskDefinition \
-            > task-definition.json
+          aws ecs describe-task-definition \
+          --task-definition ${{ env.ECS_TASK_DEFINITION_FAMILY }} \
+          --query taskDefinition \
+          > task-definition.json
 
       - name: Fill in the new image ID in the Amazon ECS task definition
         id: task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@6853cfae8c3a7d978fbf68b5a55453395541dfbb  #v1
+        uses: aws-actions/amazon-ecs-render-task-definition@6853cfae8c3a7d978fbf68b5a55453395541dfbb #v1
         with:
           task-definition: task-definition.json
           container-name: ${{ env.CONTAINER_NAME }}
           image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_APP }}:${{ needs.env-setup.outputs.image_tag }}
 
       - name: Deploy Amazon ECS task definition
-        uses: aws-actions/amazon-ecs-deploy-task-definition@a310a830f5c14e583e35d84e4e1ec7dd177c3c9c   #v2
+        uses: aws-actions/amazon-ecs-deploy-task-definition@a310a830f5c14e583e35d84e4e1ec7dd177c3c9c #v2
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
           service: ${{ env.ECS_SERVICE }}
           cluster: ${{ env.ECS_CLUSTER }}
           # wait-for-service-stability: true
+
   notify-discord:
-        needs: [env-setup, build-and-upload-image, deploy-to-ecs]
-        permissions:
-            contents: read
-        if: always()
-        uses: ./.github/workflows/notify-discord.yml
-        with:
-            status: "${{ 
-              (needs.env-setup.result == 'cancelled' || needs.build-and-upload-image.result == 'cancelled' || needs.deploy-to-ecs.result == 'cancelled') && 'cancelled' ||
-              (needs.env-setup.result == 'success' && needs.build-and-upload-image.result == 'success' && (needs.deploy-to-ecs.result == 'success' || needs.deploy-to-ecs.result == 'skipped')) && 'success' || 
-              'failure'
-             }}"
-            service_name: "Relayer"
-            env_name: ${{ needs.env-setup.outputs.target_env || 'unknown' }}
-            deployment_method: "ECS Task Update"
-        secrets:
-            DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+    needs: [env-setup, build-and-upload-image, update-config, deploy-to-ecs]
+    permissions:
+      contents: read
+    if: always()
+    uses: ./.github/workflows/notify-discord.yml
+    with:
+      status: "${{
+        (needs.env-setup.result == 'cancelled' || needs.build-and-upload-image.result == 'cancelled' || needs.update-config.result == 'cancelled' || needs.deploy-to-ecs.result == 'cancelled') && 'cancelled' ||
+        (needs.env-setup.result == 'success' && needs.build-and-upload-image.result == 'success' && needs.update-config.result == 'success' && (needs.deploy-to-ecs.result == 'success' || needs.deploy-to-ecs.result == 'skipped')) && 'success' ||
+        'failure'
+        }}"
+      service_name: "Relayer"
+      env_name: ${{ needs.env-setup.outputs.target_env || 'unknown' }}
+      deployment_method: "ECS Task Update"
+    secrets:
+      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
