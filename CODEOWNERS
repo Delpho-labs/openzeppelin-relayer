@@ -1,3 +1,3 @@
-# Delpho infrastructure/security ownership. One eligible owner approval is sufficient.
-# Repository access unchanged; upstream ownership replaced only on Delpho relayer branches.
-* @JayusJay @rmartey @snnbotchway
+# Delpho infrastructure/security ownership. Approval counts follow branch rules.
+# Upstream ownership is replaced only on Delpho relayer branches.
+* @JayusJay @rmartey @snnbotchway @ooglec
