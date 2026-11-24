@@ -22,9 +22,13 @@ on:
 jobs:
     notify-discord:
         runs-on: ubuntu-latest
+        permissions:
+          contents: read
         steps:
           - name: Checkout code
             uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 #v4
+            with:
+              persist-credentials: false
           - name: Send Notification
             env:
               DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
